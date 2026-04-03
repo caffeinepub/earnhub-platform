@@ -78,11 +78,17 @@ export interface _SERVICE {
   'approvePaymentSubmission' : ActorMethod<[bigint], undefined>,
   'approveWithdrawalRequest' : ActorMethod<[bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'ensureDefaultPlans' : ActorMethod<[], undefined>,
   'getAllDepositRequests' : ActorMethod<[], Array<DepositRequest>>,
   'getAllPaymentSubmissions' : ActorMethod<[], Array<PaymentSubmission>>,
   'getAllPlans' : ActorMethod<[], Array<Plan>>,
   'getAllWithdrawalRequests' : ActorMethod<[], Array<WithdrawalRequest>>,
+  'getCallerDepositRequests' : ActorMethod<[], Array<DepositRequest>>,
   'getCallerProfileWithEarnings' : ActorMethod<[], User>,
+  'getCallerReferralStats' : ActorMethod<
+    [],
+    { 'totalReferrals' : bigint, 'totalEarnings' : bigint }
+  >,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
@@ -98,6 +104,7 @@ export interface _SERVICE {
   >,
   'requestWithdrawal' : ActorMethod<[bigint, string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setReferredBy' : ActorMethod<[string], undefined>,
   'updatePlan' : ActorMethod<[PlanId, string, bigint, bigint, bigint], Plan>,
 }
 export declare const idlService: IDL.ServiceClass;

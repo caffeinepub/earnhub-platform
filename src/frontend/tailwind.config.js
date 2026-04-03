@@ -15,6 +15,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Figtree", "BricolageGrotesque", "system-ui", "sans-serif"],
+        display: ["BricolageGrotesque", "Figtree", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "oklch(var(--border))",
         input: "oklch(var(--input))",
@@ -74,6 +78,7 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
+        card: "0 2px 12px 0 rgba(15,59,102,0.08)",
       },
       keyframes: {
         "accordion-down": {

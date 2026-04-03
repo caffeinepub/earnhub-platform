@@ -1,8 +1,8 @@
 import { TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useNavigate } from "../hooks/useRouter";
 
 type AuthStep = "login" | "signup" | "otp" | "forgot";
 
@@ -20,6 +20,14 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [pendingRegistration, setPendingRegistration] = useState(false);
 
+  // Capture referral code from URL on mount and save to localStorage
+  useEffect(() => {
+    const refCode = new URLSearchParams(window.location.search).get("ref");
+    if (refCode) {
+      localStorage.setItem("earnhub_ref_code", refCode);
+    }
+  }, []);
+
   useEffect(() => {
     if (identity && !isInitializing) navigate("/", { replace: true });
   }, [identity, isInitializing, navigate]);
@@ -31,6 +39,12 @@ export default function AuthPage() {
         .registerUser(mobile)
         .then(() => {
           localStorage.setItem("earnhub_mobile", mobile);
+          // Apply referral if present
+          const refCode = localStorage.getItem("earnhub_ref_code");
+          if (refCode) {
+            actor.setReferredBy(refCode).catch(() => {});
+            localStorage.removeItem("earnhub_ref_code");
+          }
           navigate("/", { replace: true });
         })
         .catch((err: unknown) => {
@@ -141,6 +155,7 @@ export default function AuthPage() {
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                   placeholder="10-digit mobile number"
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  data-ocid="auth.input"
                 />
               </div>
               <div>
@@ -157,15 +172,24 @@ export default function AuthPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  data-ocid="auth.input"
                 />
               </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && (
+                <p
+                  className="text-red-500 text-sm"
+                  data-ocid="auth.error_state"
+                >
+                  {error}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handleLogin}
                 disabled={isLoggingIn}
                 className="w-full py-3.5 rounded-xl text-white font-semibold text-base disabled:opacity-60"
                 style={{ background: "#0F3B66" }}
+                data-ocid="auth.primary_button"
               >
                 {isLoggingIn ? "Connecting..." : "Login"}
               </button>
@@ -177,6 +201,7 @@ export default function AuthPage() {
                     setError("");
                   }}
                   className="text-blue-600"
+                  data-ocid="auth.secondary_button"
                 >
                   Forgot Password?
                 </button>
@@ -187,6 +212,7 @@ export default function AuthPage() {
                     setError("");
                   }}
                   className="text-blue-600 font-medium"
+                  data-ocid="auth.secondary_button"
                 >
                   Sign Up
                 </button>
@@ -219,6 +245,7 @@ export default function AuthPage() {
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                   placeholder="10-digit mobile number"
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  data-ocid="auth.input"
                 />
               </div>
               <div>
@@ -235,14 +262,23 @@ export default function AuthPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimum 6 characters"
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  data-ocid="auth.input"
                 />
               </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && (
+                <p
+                  className="text-red-500 text-sm"
+                  data-ocid="auth.error_state"
+                >
+                  {error}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handleSignup}
                 className="w-full py-3.5 rounded-xl text-white font-semibold text-base"
                 style={{ background: "#0F3B66" }}
+                data-ocid="auth.primary_button"
               >
                 Get OTP
               </button>
@@ -253,6 +289,7 @@ export default function AuthPage() {
                   setError("");
                 }}
                 className="w-full text-center text-sm text-blue-600"
+                data-ocid="auth.secondary_button"
               >
                 Already have an account? Login
               </button>
@@ -298,15 +335,24 @@ export default function AuthPage() {
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                   placeholder="6-digit OTP"
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  data-ocid="auth.input"
                 />
               </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && (
+                <p
+                  className="text-red-500 text-sm"
+                  data-ocid="auth.error_state"
+                >
+                  {error}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handleVerifyOtp}
                 disabled={isLoggingIn}
                 className="w-full py-3.5 rounded-xl text-white font-semibold text-base disabled:opacity-60"
                 style={{ background: "#0F3B66" }}
+                data-ocid="auth.primary_button"
               >
                 {isLoggingIn ? "Verifying..." : "Verify & Continue"}
               </button>
@@ -314,6 +360,7 @@ export default function AuthPage() {
                 type="button"
                 onClick={() => setStep("signup")}
                 className="w-full text-center text-sm text-blue-600"
+                data-ocid="auth.secondary_button"
               >
                 Go Back
               </button>
@@ -327,7 +374,7 @@ export default function AuthPage() {
               Reset Password
             </h2>
             <p className="text-gray-500 text-sm mb-6">
-              We\'ll send a reset link to your mobile
+              We&apos;ll send a reset link to your mobile
             </p>
             <div className="space-y-4">
               <div>
@@ -345,14 +392,23 @@ export default function AuthPage() {
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                   placeholder="10-digit mobile number"
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  data-ocid="auth.input"
                 />
               </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && (
+                <p
+                  className="text-red-500 text-sm"
+                  data-ocid="auth.error_state"
+                >
+                  {error}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handleForgot}
                 className="w-full py-3.5 rounded-xl text-white font-semibold text-base"
                 style={{ background: "#0F3B66" }}
+                data-ocid="auth.primary_button"
               >
                 Send Reset OTP
               </button>
@@ -384,6 +440,7 @@ export default function AuthPage() {
                   setGeneratedOtp("");
                 }}
                 className="w-full text-center text-sm text-blue-600"
+                data-ocid="auth.secondary_button"
               >
                 Back to Login
               </button>

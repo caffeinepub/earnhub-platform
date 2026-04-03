@@ -5,10 +5,8 @@ import Int "mo:core/Int";
 import Nat "mo:core/Nat";
 import Array "mo:core/Array";
 import Principal "mo:core/Principal";
-import Order "mo:core/Order";
 import Iter "mo:core/Iter";
 import Text "mo:core/Text";
-import List "mo:core/List";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
@@ -78,7 +76,7 @@ actor {
     submittedAt : Int;
   };
 
-  // Internal State
+  // Internal State — unchanged from previous version for upgrade compatibility
   module State {
     public type State = {
       var nextPlanId : PlanId;
@@ -111,31 +109,37 @@ actor {
 
   let state = State.init();
 
+  // Referral state — declared as separate top-level stable bindings
+  // so they can be added without breaking upgrade compatibility
+  let referredBy = Map.empty<Principal, Principal>();
+  let referralBonusPaid = Map.empty<Principal, Bool>();
+  let referralCount = Map.empty<Principal, Nat>();
+  let referralEarnings = Map.empty<Principal, Nat>();
+
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Helper function to get current timestamp in seconds
   func currentTime() : Int {
     Time.now() / 1_000_000_000;
   };
 
-  // Calculate earnings based on days elapsed
   func calculateEarnings(user : User, plan : Plan, activePlan : ActivePlan) : (User, Nat) {
     let now = currentTime();
-    let daysElapsed = Int.abs(now - activePlan.activatedAt) / 86400; // 86400 seconds = 1 day
+    let daysElapsed = Int.abs(now - activePlan.activatedAt) / 86400;
     let daysSinceUpdate = Int.abs(now - activePlan.lastEarningsUpdate) / 86400;
 
     if (daysElapsed > plan.validityDays) {
-      // Plan expired, no more earnings
       (user, 0);
     } else if (daysSinceUpdate > 0) {
+      let daysSinceActivation = Int.abs(activePlan.lastEarningsUpdate - activePlan.activatedAt) / 86400;
       let eligibleDays = if (daysElapsed > plan.validityDays) {
-        let remainingDays = plan.validityDays - Int.abs(activePlan.lastEarningsUpdate - activePlan.activatedAt) / 86400;
-        Int.abs(remainingDays);
+        if (plan.validityDays > daysSinceActivation) {
+          plan.validityDays - daysSinceActivation;
+        } else { 0 };
       } else {
         Int.abs(daysSinceUpdate);
       };
-      
+
       let earnings = eligibleDays * plan.dailyEarning;
       let newBalance = user.walletBalance + earnings;
       let updatedUser : User = {
@@ -152,7 +156,6 @@ actor {
     };
   };
 
-  // Update user earnings if they have an active plan
   func updateUserEarnings(user : User) : User {
     switch (user.activePlan) {
       case (null) { user };
@@ -175,14 +178,7 @@ actor {
     };
     let planId = state.nextPlanId;
     state.nextPlanId += 1;
-
-    let newPlan : Plan = {
-      id = planId;
-      name;
-      price;
-      dailyEarning;
-      validityDays;
-    };
+    let newPlan : Plan = { id = planId; name; price; dailyEarning; validityDays };
     state.plans.add(planId, newPlan);
     planId;
   };
@@ -194,22 +190,30 @@ actor {
     switch (state.plans.get(planId)) {
       case (null) { Runtime.trap("Plan not found") };
       case (?existingPlan) {
-        let updatedPlan : Plan = {
-          existingPlan with
-          name;
-          price;
-          dailyEarning;
-          validityDays;
-        };
+        let updatedPlan : Plan = { existingPlan with name; price; dailyEarning; validityDays };
         state.plans.add(planId, updatedPlan);
         updatedPlan;
       };
     };
   };
 
-  public query ({ caller }) func getAllPlans() : async [Plan] {
-    // Public - anyone can view available plans
+  public query func getAllPlans() : async [Plan] {
     state.plans.values().toArray();
+  };
+
+  public shared func ensureDefaultPlans() : async () {
+    let defaultPlans : [(PlanId, Text, Nat, Nat, Nat)] = [
+      (1, "Basic Plan", 500, 150, 30),
+      (2, "Standard Plan", 1000, 300, 60),
+      (3, "Premium Plan", 1750, 750, 120),
+    ];
+    for ((planId, name, price, dailyEarning, validityDays) in defaultPlans.vals()) {
+      let plan : Plan = { id = planId; name; price; dailyEarning; validityDays };
+      state.plans.add(planId, plan);
+    };
+    if (state.nextPlanId < 4) {
+      state.nextPlanId := 4;
+    };
   };
 
   public query ({ caller }) func getAllPaymentSubmissions() : async [PaymentSubmission] {
@@ -243,14 +247,9 @@ actor {
         if (submission.status != #pending) {
           Runtime.trap("Payment submission already processed");
         };
-        
-        // Update submission status
-        let updatedSubmission : PaymentSubmission = {
-          submission with status = #approved;
-        };
+        let updatedSubmission : PaymentSubmission = { submission with status = #approved };
         state.paymentSubmissions.add(paymentId, updatedSubmission);
 
-        // Activate user's plan
         switch (state.users.get(submission.user)) {
           case (null) { Runtime.trap("User not found") };
           case (?user) {
@@ -260,10 +259,46 @@ actor {
               activatedAt = now;
               lastEarningsUpdate = now;
             };
-            let updatedUser : User = {
-              user with activePlan = ?activePlan;
-            };
+            let updatedUser : User = { user with activePlan = ?activePlan };
             state.users.add(submission.user, updatedUser);
+
+            // Referral bonus: credit \u20b9500 to referrer when Basic Plan (\u20b9500) approved for referred user
+            switch (state.plans.get(submission.planId)) {
+              case (?plan) {
+                if (plan.price == 500) {
+                  switch (referredBy.get(submission.user)) {
+                    case (?referrer) {
+                      let bonusPaid = switch (referralBonusPaid.get(submission.user)) {
+                        case (?b) { b };
+                        case (null) { false };
+                      };
+                      if (not bonusPaid) {
+                        referralBonusPaid.add(submission.user, true);
+                        switch (state.users.get(referrer)) {
+                          case (?referrerUser) {
+                            let updatedReferrer : User = { referrerUser with walletBalance = referrerUser.walletBalance + 500 };
+                            state.users.add(referrer, updatedReferrer);
+                            let prevEarnings = switch (referralEarnings.get(referrer)) {
+                              case (?e) { e };
+                              case (null) { 0 };
+                            };
+                            referralEarnings.add(referrer, prevEarnings + 500);
+                            let prevCount = switch (referralCount.get(referrer)) {
+                              case (?c) { c };
+                              case (null) { 0 };
+                            };
+                            referralCount.add(referrer, prevCount + 1);
+                          };
+                          case (null) {};
+                        };
+                      };
+                    };
+                    case (null) {};
+                  };
+                };
+              };
+              case (null) {};
+            };
           };
         };
       };
@@ -280,9 +315,7 @@ actor {
         if (submission.status != #pending) {
           Runtime.trap("Payment submission already processed");
         };
-        let updatedSubmission : PaymentSubmission = {
-          submission with status = #rejected;
-        };
+        let updatedSubmission : PaymentSubmission = { submission with status = #rejected };
         state.paymentSubmissions.add(paymentId, updatedSubmission);
       };
     };
@@ -298,23 +331,15 @@ actor {
         if (request.status != #pending) {
           Runtime.trap("Withdrawal request already processed");
         };
-
-        // Deduct from user wallet
         switch (state.users.get(request.user)) {
           case (null) { Runtime.trap("User not found") };
           case (?user) {
             if (user.walletBalance < request.amount) {
               Runtime.trap("Insufficient balance");
             };
-            let updatedUser : User = {
-              user with walletBalance = user.walletBalance - request.amount;
-            };
+            let updatedUser : User = { user with walletBalance = user.walletBalance - request.amount };
             state.users.add(request.user, updatedUser);
-
-            // Update request status
-            let updatedRequest : WithdrawalRequest = {
-              request with status = #completed;
-            };
+            let updatedRequest : WithdrawalRequest = { request with status = #completed };
             state.withdrawalRequests.add(withdrawalId, updatedRequest);
           };
         };
@@ -332,9 +357,7 @@ actor {
         if (request.status != #pending) {
           Runtime.trap("Withdrawal request already processed");
         };
-        let updatedRequest : WithdrawalRequest = {
-          request with status = #rejected;
-        };
+        let updatedRequest : WithdrawalRequest = { request with status = #rejected };
         state.withdrawalRequests.add(withdrawalId, updatedRequest);
       };
     };
@@ -350,20 +373,12 @@ actor {
         if (request.status != #pending) {
           Runtime.trap("Deposit request already processed");
         };
-
-        // Credit user wallet
         switch (state.users.get(request.user)) {
           case (null) { Runtime.trap("User not found") };
           case (?user) {
-            let updatedUser : User = {
-              user with walletBalance = user.walletBalance + request.amount;
-            };
+            let updatedUser : User = { user with walletBalance = user.walletBalance + request.amount };
             state.users.add(request.user, updatedUser);
-
-            // Update request status
-            let updatedRequest : DepositRequest = {
-              request with status = #approved;
-            };
+            let updatedRequest : DepositRequest = { request with status = #approved };
             state.depositRequests.add(depositId, updatedRequest);
           };
         };
@@ -381,9 +396,7 @@ actor {
         if (request.status != #pending) {
           Runtime.trap("Deposit request already processed");
         };
-        let updatedRequest : DepositRequest = {
-          request with status = #rejected;
-        };
+        let updatedRequest : DepositRequest = { request with status = #rejected };
         state.depositRequests.add(depositId, updatedRequest);
       };
     };
@@ -391,7 +404,6 @@ actor {
 
   // USER FUNCTIONS
   public shared ({ caller }) func registerUser(mobile : Text) : async () {
-    // Public - anyone can register
     if (state.users.containsKey(caller)) {
       Runtime.trap("User already registered");
     };
@@ -422,11 +434,11 @@ actor {
     };
   };
 
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+  public query ({ caller }) func getUserProfile(targetUser : Principal) : async ?UserProfile {
+    if (caller != targetUser and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
-    switch (state.users.get(user)) {
+    switch (state.users.get(targetUser)) {
       case (null) { null };
       case (?u) {
         ?{
@@ -477,14 +489,12 @@ actor {
     };
     switch (state.users.get(caller)) {
       case (null) { Runtime.trap("User not found") };
-      case (?user) {
-        // Verify plan exists
+      case (?_) {
         switch (state.plans.get(planId)) {
           case (null) { Runtime.trap("Plan not found") };
           case (?_) {
             let paymentId = state.nextPaymentId;
             state.nextPaymentId += 1;
-
             let newSubmission : PaymentSubmission = {
               user = caller;
               planId;
@@ -508,15 +518,11 @@ actor {
     switch (state.users.get(caller)) {
       case (null) { Runtime.trap("User not found") };
       case (?user) {
-        // Update earnings before checking balance
         let updatedUser = updateUserEarnings(user);
         state.users.add(caller, updatedUser);
-
         if (updatedUser.walletBalance < amount) { Runtime.trap("Insufficient balance") };
-        
         let withdrawalId = state.nextWithdrawalId;
         state.nextWithdrawalId += 1;
-
         let newRequest : WithdrawalRequest = {
           user = caller;
           amount;
@@ -535,7 +541,6 @@ actor {
     };
     let depositId = state.nextDepositId;
     state.nextDepositId += 1;
-
     let newRequest : DepositRequest = {
       user = caller;
       amount;
@@ -544,5 +549,41 @@ actor {
       submittedAt = currentTime();
     };
     state.depositRequests.add(depositId, newRequest);
+  };
+
+  public query ({ caller }) func getCallerDepositRequests() : async [DepositRequest] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized");
+    };
+    state.depositRequests.values().toArray().filter(func(d : DepositRequest) : Bool { d.user == caller });
+  };
+
+  // REFERRAL FUNCTIONS
+
+  // Store that the caller was referred by the owner of referralPrincipal text
+  public shared ({ caller }) func setReferredBy(referralPrincipal : Text) : async () {
+    // Silently ignore if already set
+    if (referredBy.containsKey(caller)) { return };
+    // Caller must be a registered user
+    if (not state.users.containsKey(caller)) { return };
+    let referrer = Principal.fromText(referralPrincipal);
+    // Can't refer yourself
+    if (referrer == caller) { return };
+    // Referrer must also be a registered user
+    if (not state.users.containsKey(referrer)) { return };
+    referredBy.add(caller, referrer);
+  };
+
+  // Get referral stats for the caller
+  public query ({ caller }) func getCallerReferralStats() : async { totalReferrals : Nat; totalEarnings : Nat } {
+    let totalReferrals = switch (referralCount.get(caller)) {
+      case (?n) { n };
+      case (null) { 0 };
+    };
+    let totalEarnings = switch (referralEarnings.get(caller)) {
+      case (?n) { n };
+      case (null) { 0 };
+    };
+    { totalReferrals; totalEarnings };
   };
 };

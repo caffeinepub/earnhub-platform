@@ -1,44 +1,47 @@
 # EarnHub Platform
 
 ## Current State
-New project. No existing application files.
+Full rebuild from scratch. Previous version (v19) expired.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Full user authentication system: signup with mobile number + password, simulated OTP (displayed on screen), login, logout, forgot password (simulated reset)
-- Dashboard with wallet balance, subscription plan cards (₹500, ₹1000, ₹1750), bottom nav (Home, Wallet, Deposit, Withdraw, Profile)
-- UPI Payment flow: select PhonePe/Google Pay/Paytm, show QR placeholder, enter UTR/transaction ID, pending status
-- Admin panel at /admin: hardcoded credentials (admin/admin123), manage payments/withdrawals/deposits/plans
-- Earnings system: daily earnings credited based on time elapsed since plan activation
-- Withdrawal system: user requests via UPI ID, min ₹100, admin approves/rejects
-- Deposit system: user submits amount + UTR, admin approves/rejects, credits wallet
-- Profile screen: mobile number, active plan, join date, logout
+- Full EarnHub platform with all features from previous version
 
 ### Modify
-- N/A (new project)
+- N/A (full rebuild)
 
 ### Remove
-- N/A (new project)
+- N/A
 
 ## Implementation Plan
 
 ### Backend (Motoko)
-- User record: id, mobile, hashedPassword, joinDate, walletBalance, activePlan (optional)
-- Plan record: id, name, price, dailyEarning, validityDays
-- PaymentSubmission: id, userId, planId, utrNumber, paymentApp, status (Pending/Approved/Rejected), submittedAt
-- WithdrawalRequest: id, userId, amount, upiId, status (Pending/Completed/Rejected), requestedAt
-- DepositRequest: id, userId, amount, utrNumber, status (Pending/Approved/Rejected), submittedAt
-- ActivePlan: planId, activatedAt, totalEarned
-- APIs: register, login, getProfile, updateWallet, submitPayment, submitWithdrawal, submitDeposit, getMySubmissions
-- Admin APIs: getAllPayments, approvePayment, rejectPayment, getAllWithdrawals, approveWithdrawal, rejectWithdrawal, getAllDeposits, approveDeposit, rejectDeposit, getPlans, updatePlan
-- Earnings calculation: on wallet fetch, compute days since activation * dailyEarning and update balance
+- User registration and authentication (mobile number + OTP simulation)
+- Subscription plans management (Basic ₹500/₹150 per day/60 days, Standard ₹1000/₹300 per day/60 days, Premium ₹1750/₹750 per day/120 days)
+- Auto-seed plans on first load
+- Deposit management: users submit UTR/Transaction ID, admin approves/rejects
+- Wallet balance tracking (defaults to ₹0, updates on approved deposit)
+- Withdrawal requests: users submit UPI ID + amount, admin processes
+- Earnings tracking: daily earnings per active plan
+- Referral system: unique referral code per user, track referrals, auto-credit ₹500 when referred user gets Basic Plan (₹500) approved
+- Admin panel: manage users, plans, deposits, withdrawals
+- Notification system: offer messages stored and served to users
+- UPI QR code storage for payment display
 
-### Frontend (React + TypeScript + Tailwind)
-- React Router for navigation: /auth, /, /wallet, /deposit, /withdraw, /profile, /admin
-- Auth context for session management (stored in localStorage)
-- Mobile-first layout with max-width container and bottom nav
-- Plan cards with buy now flow → UPI payment modal → UTR entry → confirmation
-- Admin dashboard with tabs: Payments, Withdrawals, Deposits, Plans
-- All currency in ₹ (Indian Rupee)
-- Clean, modern mobile app feel with card-based UI
+### Frontend
+- Mobile-first PWA design
+- Authentication: mobile number entry + OTP screen (simulated)
+- Home screen: wallet balance, available plans, bottom navigation
+- Plans display: instant display with fallback (no loading skeletons)
+- Buy Now flow: payment modal with static UPI QR code image only (no camera)
+- Payment app logos: PhonePe, Google Pay, Paytm real logos shown
+- Deposit page: static QR code display, UTR entry form
+- Wallet/Earnings page: balance, active plans, earnings history
+- Withdrawal page: UPI ID entry, amount, submission, own history only
+- Referral tab: unique link copy button, earnings display, ₹500 bonus info
+- Notification bell (top left): clickable, shows offer messages with New badge, Mark all read
+- Admin panel at /admin (admin/admin123): users, plans, deposits, withdrawals tabs
+- Admin withdrawal view: UPI ID in bold orange box with Copy button
+- All text in English only
+- Bottom navigation: Home, Wallet, Deposit, Referral, Profile icons

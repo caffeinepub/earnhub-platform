@@ -87,6 +87,7 @@ export const idlService = IDL.Service({
   'approvePaymentSubmission' : IDL.Func([IDL.Nat], [], []),
   'approveWithdrawalRequest' : IDL.Func([IDL.Nat], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'ensureDefaultPlans' : IDL.Func([], [], []),
   'getAllDepositRequests' : IDL.Func([], [IDL.Vec(DepositRequest)], ['query']),
   'getAllPaymentSubmissions' : IDL.Func(
       [],
@@ -99,7 +100,17 @@ export const idlService = IDL.Service({
       [IDL.Vec(WithdrawalRequest)],
       ['query'],
     ),
+  'getCallerDepositRequests' : IDL.Func(
+      [],
+      [IDL.Vec(DepositRequest)],
+      ['query'],
+    ),
   'getCallerProfileWithEarnings' : IDL.Func([], [User], []),
+  'getCallerReferralStats' : IDL.Func(
+      [],
+      [IDL.Record({ 'totalReferrals' : IDL.Nat, 'totalEarnings' : IDL.Nat })],
+      ['query'],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getUserProfile' : IDL.Func(
@@ -116,6 +127,7 @@ export const idlService = IDL.Service({
   'requestPlanPurchase' : IDL.Func([PlanId, PaymentApp, UTRNumber], [], []),
   'requestWithdrawal' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setReferredBy' : IDL.Func([IDL.Text], [], []),
   'updatePlan' : IDL.Func(
       [PlanId, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat],
       [Plan],
@@ -205,6 +217,7 @@ export const idlFactory = ({ IDL }) => {
     'approvePaymentSubmission' : IDL.Func([IDL.Nat], [], []),
     'approveWithdrawalRequest' : IDL.Func([IDL.Nat], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'ensureDefaultPlans' : IDL.Func([], [], []),
     'getAllDepositRequests' : IDL.Func(
         [],
         [IDL.Vec(DepositRequest)],
@@ -221,7 +234,17 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(WithdrawalRequest)],
         ['query'],
       ),
+    'getCallerDepositRequests' : IDL.Func(
+        [],
+        [IDL.Vec(DepositRequest)],
+        ['query'],
+      ),
     'getCallerProfileWithEarnings' : IDL.Func([], [User], []),
+    'getCallerReferralStats' : IDL.Func(
+        [],
+        [IDL.Record({ 'totalReferrals' : IDL.Nat, 'totalEarnings' : IDL.Nat })],
+        ['query'],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getUserProfile' : IDL.Func(
@@ -238,6 +261,7 @@ export const idlFactory = ({ IDL }) => {
     'requestPlanPurchase' : IDL.Func([PlanId, PaymentApp, UTRNumber], [], []),
     'requestWithdrawal' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setReferredBy' : IDL.Func([IDL.Text], [], []),
     'updatePlan' : IDL.Func(
         [PlanId, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat],
         [Plan],

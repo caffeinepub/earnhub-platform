@@ -1,9 +1,9 @@
 import { Calendar, LogOut, Phone, Star, User } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import type { Plan, UserProfile } from "../backend";
 import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useNavigate } from "../hooks/useRouter";
 
 export default function ProfilePage() {
   const { actor } = useActor();
@@ -11,11 +11,15 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const mobile = localStorage.getItem("earnhub_mobile") || "—";
 
   useEffect(() => {
-    if (!actor) return;
+    if (!actor) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     Promise.all([
       actor
         .getCallerUserProfile()
@@ -136,10 +140,24 @@ export default function ProfilePage() {
         onClick={handleLogout}
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white"
         style={{ background: "#d32f2f" }}
+        data-ocid="profile.delete_button"
       >
         <LogOut size={18} />
         Logout
       </button>
+
+      {/* Footer */}
+      <footer className="mt-12 text-center text-xs text-gray-400">
+        © {new Date().getFullYear()}. Built with love using{" "}
+        <a
+          href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-600"
+        >
+          caffeine.ai
+        </a>
+      </footer>
     </div>
   );
 }

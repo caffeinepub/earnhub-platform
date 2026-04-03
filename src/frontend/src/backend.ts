@@ -165,14 +165,20 @@ export interface backendInterface {
     approvePaymentSubmission(paymentId: bigint): Promise<void>;
     approveWithdrawalRequest(withdrawalId: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    ensureDefaultPlans(): Promise<void>;
     getAllDepositRequests(): Promise<Array<DepositRequest>>;
     getAllPaymentSubmissions(): Promise<Array<PaymentSubmission>>;
     getAllPlans(): Promise<Array<Plan>>;
     getAllWithdrawalRequests(): Promise<Array<WithdrawalRequest>>;
+    getCallerDepositRequests(): Promise<Array<DepositRequest>>;
     getCallerProfileWithEarnings(): Promise<User>;
+    getCallerReferralStats(): Promise<{
+        totalReferrals: bigint;
+        totalEarnings: bigint;
+    }>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getUserProfile(targetUser: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     registerUser(mobile: string): Promise<void>;
     rejectDepositRequest(depositId: bigint): Promise<void>;
@@ -182,6 +188,7 @@ export interface backendInterface {
     requestPlanPurchase(planId: PlanId, paymentApp: PaymentApp, utrNumber: UTRNumber): Promise<void>;
     requestWithdrawal(amount: bigint, upiId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setReferredBy(referralPrincipal: string): Promise<void>;
     updatePlan(planId: PlanId, name: string, price: bigint, dailyEarning: bigint, validityDays: bigint): Promise<Plan>;
 }
 import type { ActivePlan as _ActivePlan, DepositRequest as _DepositRequest, PaymentApp as _PaymentApp, PaymentSubmission as _PaymentSubmission, PlanId as _PlanId, UTRNumber as _UTRNumber, User as _User, UserProfile as _UserProfile, UserRole as _UserRole, WithdrawalRequest as _WithdrawalRequest } from "./declarations/backend.did.d.ts";
@@ -271,6 +278,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async ensureDefaultPlans(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.ensureDefaultPlans();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.ensureDefaultPlans();
+            return result;
+        }
+    }
     async getAllDepositRequests(): Promise<Array<DepositRequest>> {
         if (this.processError) {
             try {
@@ -327,6 +348,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getCallerDepositRequests(): Promise<Array<DepositRequest>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerDepositRequests();
+                return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerDepositRequests();
+            return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getCallerProfileWithEarnings(): Promise<User> {
         if (this.processError) {
             try {
@@ -339,6 +374,23 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getCallerProfileWithEarnings();
             return from_candid_User_n16(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCallerReferralStats(): Promise<{
+        totalReferrals: bigint;
+        totalEarnings: bigint;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerReferralStats();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerReferralStats();
+            return result;
         }
     }
     async getCallerUserProfile(): Promise<UserProfile | null> {
@@ -506,6 +558,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n26(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async setReferredBy(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setReferredBy(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setReferredBy(arg0);
             return result;
         }
     }

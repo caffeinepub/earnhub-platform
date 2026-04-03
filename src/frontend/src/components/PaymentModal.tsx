@@ -6,9 +6,21 @@ import { useActor } from "../hooks/useActor";
 type Step = "select-app" | "qr" | "utr" | "success";
 
 const APP_OPTIONS = [
-  { id: PaymentApp.PhonePe, label: "PhonePe", emoji: "💜" },
-  { id: PaymentApp.GooglePay, label: "Google Pay", emoji: "🔵" },
-  { id: PaymentApp.Paytm, label: "Paytm", emoji: "💙" },
+  {
+    id: PaymentApp.PhonePe,
+    label: "PhonePe",
+    logo: "/assets/generated/phonepe-logo-transparent.dim_100x100.png",
+  },
+  {
+    id: PaymentApp.GooglePay,
+    label: "Google Pay",
+    logo: "/assets/generated/googlepay-logo-transparent.dim_100x100.png",
+  },
+  {
+    id: PaymentApp.Paytm,
+    label: "Paytm",
+    logo: "/assets/generated/paytm-logo-transparent.dim_100x100.png",
+  },
 ];
 
 export default function PaymentModal({
@@ -59,11 +71,13 @@ export default function PaymentModal({
               type="button"
               onClick={onClose}
               className="p-2 rounded-full bg-gray-100"
+              data-ocid="payment_modal.close_button"
             >
               <X size={18} className="text-gray-600" />
             </button>
           </div>
         )}
+
         {step === "select-app" && (
           <>
             <p className="text-sm font-semibold text-gray-700 mb-3">
@@ -79,8 +93,13 @@ export default function PaymentModal({
                     setStep("qr");
                   }}
                   className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-blue-300 transition-colors"
+                  data-ocid="payment_modal.button"
                 >
-                  <span className="text-2xl">{app.emoji}</span>
+                  <img
+                    src={app.logo}
+                    alt={app.label}
+                    className="w-10 h-10 object-contain rounded-lg"
+                  />
                   <span className="font-semibold text-gray-800">
                     {app.label}
                   </span>
@@ -89,38 +108,43 @@ export default function PaymentModal({
             </div>
           </>
         )}
+
         {step === "qr" && (
           <>
-            <p className="text-sm font-semibold text-gray-700 mb-4">
+            <p className="text-sm font-semibold text-gray-700 mb-3">
               Pay ₹{Number(plan.price)} via {selectedApp}
             </p>
-            <div className="mx-auto w-52 h-52 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center mb-4">
-              <div className="text-5xl mb-2">📱</div>
-              <p className="text-xs text-gray-500 text-center px-4">
-                Admin UPI QR Code
-              </p>
-              <p className="text-xs text-gray-400 text-center px-4 mt-1">
-                Scan to pay
-              </p>
+            <p className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Scan to Pay
+            </p>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/assets/20260330_191337-019d3f3a-f423-76ed-bb39-fa2c1d041ae5.jpg"
+                alt="UPI QR Code"
+                className="w-64 h-64 object-contain rounded-2xl border-4 border-blue-100 shadow-md"
+              />
             </div>
             <div className="bg-blue-50 rounded-xl p-3 mb-5">
-              <p className="text-xs text-blue-700 text-center font-medium">
-                UPI ID: earnhub@upi
-              </p>
-              <p className="text-sm font-bold text-blue-900 text-center mt-1">
+              <p className="text-sm font-bold text-blue-900 text-center">
                 Amount: ₹{Number(plan.price)}
+              </p>
+              <p className="text-xs text-blue-600 text-center mt-1">
+                Scan the QR code using GPay / PhonePe / Paytm and complete your
+                payment
               </p>
             </div>
             <button
               type="button"
               onClick={() => setStep("utr")}
-              className="w-full py-3.5 rounded-xl text-white font-semibold"
+              className="w-full py-3.5 rounded-xl text-white font-semibold mt-2"
               style={{ background: "#0F3B66" }}
+              data-ocid="payment_modal.primary_button"
             >
-              I have paid, Enter UTR
+              I Have Paid — Enter UTR
             </button>
           </>
         )}
+
         {step === "utr" && (
           <>
             <p className="text-sm font-semibold text-gray-700 mb-2">
@@ -146,20 +170,30 @@ export default function PaymentModal({
                 }}
                 placeholder="e.g. 423812345678"
                 className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                data-ocid="payment_modal.input"
               />
             </div>
-            {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+            {error && (
+              <p
+                className="text-red-500 text-sm mb-3"
+                data-ocid="payment_modal.error_state"
+              >
+                {error}
+              </p>
+            )}
             <button
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
               className="w-full py-3.5 rounded-xl text-white font-semibold disabled:opacity-60"
               style={{ background: "#0F3B66" }}
+              data-ocid="payment_modal.submit_button"
             >
               {submitting ? "Submitting..." : "Submit Payment"}
             </button>
           </>
         )}
+
         {step === "success" && (
           <div className="flex flex-col items-center py-8">
             <div
@@ -188,6 +222,7 @@ export default function PaymentModal({
               onClick={onSuccess}
               className="mt-6 w-full py-3.5 rounded-xl text-white font-semibold"
               style={{ background: "#0F3B66" }}
+              data-ocid="payment_modal.primary_button"
             >
               Done
             </button>

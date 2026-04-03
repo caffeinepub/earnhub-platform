@@ -82,14 +82,20 @@ export interface backendInterface {
     approvePaymentSubmission(paymentId: bigint): Promise<void>;
     approveWithdrawalRequest(withdrawalId: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    ensureDefaultPlans(): Promise<void>;
     getAllDepositRequests(): Promise<Array<DepositRequest>>;
     getAllPaymentSubmissions(): Promise<Array<PaymentSubmission>>;
     getAllPlans(): Promise<Array<Plan>>;
     getAllWithdrawalRequests(): Promise<Array<WithdrawalRequest>>;
+    getCallerDepositRequests(): Promise<Array<DepositRequest>>;
     getCallerProfileWithEarnings(): Promise<User>;
+    getCallerReferralStats(): Promise<{
+        totalReferrals: bigint;
+        totalEarnings: bigint;
+    }>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getUserProfile(targetUser: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     registerUser(mobile: string): Promise<void>;
     rejectDepositRequest(depositId: bigint): Promise<void>;
@@ -99,5 +105,6 @@ export interface backendInterface {
     requestPlanPurchase(planId: PlanId, paymentApp: PaymentApp, utrNumber: UTRNumber): Promise<void>;
     requestWithdrawal(amount: bigint, upiId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setReferredBy(referralPrincipal: string): Promise<void>;
     updatePlan(planId: PlanId, name: string, price: bigint, dailyEarning: bigint, validityDays: bigint): Promise<Plan>;
 }

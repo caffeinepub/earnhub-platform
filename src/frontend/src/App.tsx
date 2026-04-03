@@ -1,16 +1,59 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import Layout from "./components/Layout";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { RouterContext } from "./hooks/useRouter";
+import type { Route } from "./hooks/useRouter";
 import AdminPage from "./pages/AdminPage";
 import AuthPage from "./pages/AuthPage";
 import DepositPage from "./pages/DepositPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
+import ReferralPage from "./pages/ReferralPage";
 import WalletPage from "./pages/WalletPage";
 import WithdrawPage from "./pages/WithdrawPage";
 
+function getInitialPathname(): string {
+  return window.location.pathname || "/";
+}
+
+function RouterProvider({ children }: { children: React.ReactNode }) {
+  const [pathname, setPathname] = useState(getInitialPathname);
+
+  useEffect(() => {
+    const handler = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
+
+  const navigate = useCallback((to: Route, options?: { replace?: boolean }) => {
+    if (options?.replace) {
+      window.history.replaceState(null, "", to);
+    } else {
+      window.history.pushState(null, "", to);
+    }
+    setPathname(to);
+  }, []);
+
+  return (
+    <RouterContext.Provider value={{ pathname, navigate }}>
+      {children}
+    </RouterContext.Provider>
+  );
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { identity, isInitializing } = useInternetIdentity();
+  const [redirected, setRedirected] = useState(false);
+
+  useEffect(() => {
+    if (!isInitializing && !identity && !redirected) {
+      setRedirected(true);
+      window.history.replaceState(null, "", "/auth");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
+  }, [identity, isInitializing, redirected]);
+
   if (isInitializing) {
     return (
       <div
@@ -21,68 +64,48 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (!identity) return <Navigate to="/auth" replace />;
+  if (!identity) return null;
   return <>{children}</>;
+}
+
+function AppRoutes() {
+  const [pathname, setPathname] = useState(getInitialPathname);
+
+  useEffect(() => {
+    const handler = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
+
+  if (pathname === "/auth") {
+    return <AuthPage />;
+  }
+  if (pathname === "/admin") {
+    return <AdminPage />;
+  }
+
+  const protectedPages: Record<string, React.ReactNode> = {
+    "/": <HomePage />,
+    "/wallet": <WalletPage />,
+    "/deposit": <DepositPage />,
+    "/withdraw": <WithdrawPage />,
+    "/referral": <ReferralPage />,
+    "/profile": <ProfilePage />,
+  };
+
+  const page = protectedPages[pathname] ?? <HomePage />;
+
+  return (
+    <ProtectedRoute>
+      <Layout>{page}</Layout>
+    </ProtectedRoute>
+  );
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <HomePage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/wallet"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <WalletPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/deposit"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <DepositPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/withdraw"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <WithdrawPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ProfilePage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <RouterProvider>
+      <AppRoutes />
+    </RouterProvider>
   );
 }

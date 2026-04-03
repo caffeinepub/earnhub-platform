@@ -1,12 +1,14 @@
 import { ArrowUpFromLine, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   type Plan,
   type UserProfile,
   Variant_pending_completed_rejected,
+  type WithdrawalRequest,
 } from "../backend";
 import { useActor } from "../hooks/useActor";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useNavigate } from "../hooks/useRouter";
 
 function statusBadge(status: Variant_pending_completed_rejected) {
   if (status === Variant_pending_completed_rejected.completed)
@@ -30,16 +32,18 @@ function statusBadge(status: Variant_pending_completed_rejected) {
 
 export default function WalletPage() {
   const { actor } = useActor();
+  const { identity } = useInternetIdentity();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [withdrawals, setWithdrawals] = useState<
-    Awaited<ReturnType<NonNullable<typeof actor>["getAllWithdrawalRequests"]>>
-  >([]);
-  const [loading, setLoading] = useState(true);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!actor) return;
+    if (!actor) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     Promise.all([
       actor
@@ -59,10 +63,19 @@ export default function WalletPage() {
         .catch(() => {}),
       actor
         .getAllWithdrawalRequests()
-        .then(setWithdrawals)
+        .then((all) => {
+          const callerPrincipal = identity?.getPrincipal().toString();
+          if (callerPrincipal) {
+            setWithdrawals(
+              all.filter((w) => w.user.toString() === callerPrincipal),
+            );
+          } else {
+            setWithdrawals(all);
+          }
+        })
         .catch(() => {}),
     ]).finally(() => setLoading(false));
-  }, [actor]);
+  }, [actor, identity]);
 
   const balance = profile ? Number(profile.walletBalance) : 0;
   const activePlan =
@@ -86,8 +99,11 @@ export default function WalletPage() {
         }}
       >
         <p className="text-white/70 text-sm">Available Balance</p>
-        <p className="text-white text-4xl font-extrabold mt-1">
-          ₹{loading ? "—" : balance.toLocaleString("en-IN")}
+        <p
+          className="text-white text-4xl font-extrabold mt-1"
+          data-ocid="wallet.balance"
+        >
+          ₹{balance.toLocaleString("en-IN")}
         </p>
         {activePlan && (
           <p className="text-white/70 text-xs mt-2">
@@ -137,6 +153,7 @@ export default function WalletPage() {
         onClick={() => navigate("/withdraw")}
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-semibold mb-5"
         style={{ background: "#0F3B66" }}
+        data-ocid="wallet.primary_button"
       >
         <ArrowUpFromLine size={18} />
         Request Withdrawal
@@ -146,9 +163,17 @@ export default function WalletPage() {
           Withdrawal History
         </h3>
         {loading ? (
-          <div className="text-gray-400 text-sm">Loading...</div>
+          <div
+            className="text-gray-400 text-sm"
+            data-ocid="wallet.loading_state"
+          >
+            Loading...
+          </div>
         ) : withdrawals.length === 0 ? (
-          <div className="text-center py-8 text-gray-400 text-sm">
+          <div
+            className="text-center py-8 text-gray-400 text-sm"
+            data-ocid="wallet.empty_state"
+          >
             No withdrawals yet
           </div>
         ) : (
@@ -156,10 +181,11 @@ export default function WalletPage() {
             {[...withdrawals]
               .reverse()
               .slice(0, 10)
-              .map((w) => (
+              .map((w, idx) => (
                 <div
                   key={`${w.upiId}-${w.requestedAt.toString()}`}
                   className="bg-white rounded-xl p-3 shadow-sm flex items-center justify-between"
+                  data-ocid={`wallet.item.${idx + 1}`}
                 >
                   <div>
                     <p className="text-sm font-semibold text-gray-800">
@@ -173,6 +199,19 @@ export default function WalletPage() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <footer className="mt-12 text-center text-xs text-gray-400">
+        © {new Date().getFullYear()}. Built with love using{" "}
+        <a
+          href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-600"
+        >
+          caffeine.ai
+        </a>
+      </footer>
     </div>
   );
 }

@@ -2,76 +2,96 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Figtree";
+  src: url("/assets/fonts/Figtree.woff2") format("woff2");
+  font-weight: 300 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "BricolageGrotesque";
+  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    --radius: 0.625rem;
-    --background: 1 0 0;
-    --foreground: 0.145 0 0;
+    --radius: 0.75rem;
+
+    /* EarnHub brand colors — primary navy, accent orange, secondary teal */
+    /* Navy #0F3B66 → oklch(0.34 0.1 240) */
+    /* Orange #F57C1F → oklch(0.70 0.19 45) */
+    /* Teal #18A6A0 → oklch(0.64 0.10 187) */
+
+    --background: 0.97 0 0;
+    --foreground: 0.2 0.04 250;
     --card: 1 0 0;
-    --card-foreground: 0.145 0 0;
+    --card-foreground: 0.2 0.04 250;
     --popover: 1 0 0;
-    --popover-foreground: 0.145 0 0;
-    --primary: 0.205 0 0;
-    --primary-foreground: 0.985 0 0;
-    --secondary: 0.97 0 0;
-    --secondary-foreground: 0.205 0 0;
-    --muted: 0.97 0 0;
-    --muted-foreground: 0.556 0 0;
-    --accent: 0.97 0 0;
-    --accent-foreground: 0.205 0 0;
-    --destructive: 0.577 0.245 27.325;
-    --destructive-foreground: 0.985 0 0;
-    --border: 0.922 0 0;
-    --input: 0.922 0 0;
-    --ring: 0.708 0 0;
-    --chart-1: 0.646 0.222 41.116;
-    --chart-2: 0.6 0.118 184.704;
-    --chart-3: 0.398 0.07 227.392;
-    --chart-4: 0.828 0.189 84.429;
-    --chart-5: 0.769 0.188 70.08;
-    --sidebar: 0.985 0 0;
-    --sidebar-foreground: 0.145 0 0;
-    --sidebar-primary: 0.205 0 0;
-    --sidebar-primary-foreground: 0.985 0 0;
-    --sidebar-accent: 0.97 0 0;
-    --sidebar-accent-foreground: 0.205 0 0;
-    --sidebar-border: 0.922 0 0;
-    --sidebar-ring: 0.708 0 0;
+    --popover-foreground: 0.2 0.04 250;
+    --primary: 0.34 0.1 240;
+    --primary-foreground: 0.98 0 0;
+    --secondary: 0.64 0.1 187;
+    --secondary-foreground: 0.98 0 0;
+    --muted: 0.94 0.01 240;
+    --muted-foreground: 0.5 0.03 240;
+    --accent: 0.7 0.19 45;
+    --accent-foreground: 0.98 0 0;
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.9 0.01 240;
+    --input: 0.9 0.01 240;
+    --ring: 0.34 0.1 240;
+    --chart-1: 0.7 0.19 45;
+    --chart-2: 0.64 0.1 187;
+    --chart-3: 0.34 0.1 240;
+    --chart-4: 0.55 0.22 25;
+    --chart-5: 0.82 0.12 84;
+    --sidebar: 0.34 0.1 240;
+    --sidebar-foreground: 0.98 0 0;
+    --sidebar-primary: 0.7 0.19 45;
+    --sidebar-primary-foreground: 0.98 0 0;
+    --sidebar-accent: 0.64 0.1 187;
+    --sidebar-accent-foreground: 0.98 0 0;
+    --sidebar-border: 0.45 0.08 240;
+    --sidebar-ring: 0.7 0.19 45;
   }
 
   .dark {
-    --background: 0.145 0 0;
-    --foreground: 0.985 0 0;
-    --card: 0.205 0 0;
-    --card-foreground: 0.985 0 0;
-    --popover: 0.269 0 0;
-    --popover-foreground: 0.985 0 0;
-    --primary: 0.922 0 0;
-    --primary-foreground: 0.205 0 0;
-    --secondary: 0.269 0 0;
-    --secondary-foreground: 0.985 0 0;
-    --muted: 0.269 0 0;
-    --muted-foreground: 0.708 0 0;
-    --accent: 0.371 0 0;
-    --accent-foreground: 0.985 0 0;
-    --destructive: 0.704 0.191 22.216;
-    --destructive-foreground: 0.205 0 0;
+    --background: 0.18 0.04 245;
+    --foreground: 0.95 0 0;
+    --card: 0.24 0.05 245;
+    --card-foreground: 0.95 0 0;
+    --popover: 0.28 0.05 245;
+    --popover-foreground: 0.95 0 0;
+    --primary: 0.7 0.19 45;
+    --primary-foreground: 0.1 0 0;
+    --secondary: 0.64 0.1 187;
+    --secondary-foreground: 0.98 0 0;
+    --muted: 0.3 0.04 245;
+    --muted-foreground: 0.65 0.02 240;
+    --accent: 0.7 0.19 45;
+    --accent-foreground: 0.1 0 0;
+    --destructive: 0.6 0.22 25;
+    --destructive-foreground: 0.98 0 0;
     --border: 1 0 0 / 10%;
     --input: 1 0 0 / 15%;
-    --ring: 0.556 0 0;
-    --chart-1: 0.488 0.243 264.376;
-    --chart-2: 0.696 0.17 162.48;
-    --chart-3: 0.769 0.188 70.08;
-    --chart-4: 0.627 0.265 303.9;
-    --chart-5: 0.645 0.246 16.439;
-    --sidebar: 0.205 0 0;
-    --sidebar-foreground: 0.985 0 0;
-    --sidebar-primary: 0.488 0.243 264.376;
-    --sidebar-primary-foreground: 0.985 0 0;
-    --sidebar-accent: 0.269 0 0;
-    --sidebar-accent-foreground: 0.985 0 0;
+    --ring: 0.7 0.19 45;
+    --chart-1: 0.7 0.19 45;
+    --chart-2: 0.64 0.1 187;
+    --chart-3: 0.48 0.1 240;
+    --chart-4: 0.6 0.22 25;
+    --chart-5: 0.82 0.12 84;
+    --sidebar: 0.22 0.06 245;
+    --sidebar-foreground: 0.95 0 0;
+    --sidebar-primary: 0.7 0.19 45;
+    --sidebar-primary-foreground: 0.1 0 0;
+    --sidebar-accent: 0.64 0.1 187;
+    --sidebar-accent-foreground: 0.98 0 0;
     --sidebar-border: 1 0 0 / 10%;
-    --sidebar-ring: 0.439 0 0;
+    --sidebar-ring: 0.7 0.19 45;
   }
 
   * {
@@ -79,5 +99,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Figtree", "BricolageGrotesque", system-ui, sans-serif;
   }
 }

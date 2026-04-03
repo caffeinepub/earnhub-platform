@@ -2,6 +2,7 @@ import { ArrowUpFromLine, Check } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Variant_pending_completed_rejected } from "../backend";
 import { useActor } from "../hooks/useActor";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
 
 function statusBadge(status: Variant_pending_completed_rejected) {
   if (status === Variant_pending_completed_rejected.completed)
@@ -24,7 +25,8 @@ function statusBadge(status: Variant_pending_completed_rejected) {
 }
 
 export default function WithdrawPage() {
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
   const [amount, setAmount] = useState("");
   const [upiId, setUpiId] = useState("");
   const [error, setError] = useState("");
@@ -33,16 +35,29 @@ export default function WithdrawPage() {
   const [withdrawals, setWithdrawals] = useState<
     Awaited<ReturnType<NonNullable<typeof actor>["getAllWithdrawalRequests"]>>
   >([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
 
   const fetchWithdrawals = useCallback(() => {
-    if (!actor) return;
+    if (!actor) {
+      setDataLoading(false);
+      return;
+    }
+    setDataLoading(true);
     actor
       .getAllWithdrawalRequests()
-      .then(setWithdrawals)
+      .then((all) => {
+        const callerPrincipal = identity?.getPrincipal().toString();
+        if (callerPrincipal) {
+          setWithdrawals(
+            all.filter((w) => w.user.toString() === callerPrincipal),
+          );
+        } else {
+          setWithdrawals(all);
+        }
+      })
       .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [actor]);
+      .finally(() => setDataLoading(false));
+  }, [actor, identity]);
 
   useEffect(() => {
     fetchWithdrawals();
@@ -74,6 +89,8 @@ export default function WithdrawPage() {
       setSubmitting(false);
     }
   };
+
+  const isLoading = isFetching || dataLoading;
 
   return (
     <div className="px-4 py-5 pb-8">
@@ -114,6 +131,7 @@ export default function WithdrawPage() {
               }}
               placeholder="Minimum ₹100"
               className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              data-ocid="withdraw.input"
             />
           </div>
           <div>
@@ -133,15 +151,24 @@ export default function WithdrawPage() {
               }}
               placeholder="yourname@upi"
               className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              data-ocid="withdraw.textarea"
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <p
+              className="text-red-500 text-sm"
+              data-ocid="withdraw.error_state"
+            >
+              {error}
+            </p>
+          )}
           <button
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
             className="w-full py-3.5 rounded-xl text-white font-semibold disabled:opacity-60"
             style={{ background: "#0F3B66" }}
+            data-ocid="withdraw.submit_button"
           >
             {submitting ? "Submitting..." : "Request Withdrawal"}
           </button>
@@ -150,21 +177,30 @@ export default function WithdrawPage() {
       <h3 className="text-sm font-bold text-gray-900 mb-3">
         Withdrawal History
       </h3>
-      {loading ? (
-        <div className="text-gray-400 text-sm">Loading...</div>
+      {isLoading ? (
+        <div
+          className="text-gray-400 text-sm"
+          data-ocid="withdraw.loading_state"
+        >
+          Loading...
+        </div>
       ) : withdrawals.length === 0 ? (
-        <div className="text-center py-8 text-gray-400 text-sm">
+        <div
+          className="text-center py-8 text-gray-400 text-sm"
+          data-ocid="withdraw.empty_state"
+        >
           No withdrawals yet
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3" data-ocid="withdraw.list">
           {[...withdrawals]
             .reverse()
             .slice(0, 10)
-            .map((w) => (
+            .map((w, idx) => (
               <div
                 key={`${w.upiId}-${w.requestedAt.toString()}`}
                 className="bg-white rounded-xl p-3 shadow-sm flex items-center justify-between"
+                data-ocid={`withdraw.item.${idx + 1}`}
               >
                 <div>
                   <p className="text-sm font-semibold text-gray-800">
@@ -177,6 +213,19 @@ export default function WithdrawPage() {
             ))}
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="mt-12 text-center text-xs text-gray-400">
+        © {new Date().getFullYear()}. Built with love using{" "}
+        <a
+          href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-600"
+        >
+          caffeine.ai
+        </a>
+      </footer>
     </div>
   );
 }
