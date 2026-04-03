@@ -20,12 +20,9 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [pendingRegistration, setPendingRegistration] = useState(false);
 
-  // Capture referral code from URL on mount and save to localStorage
   useEffect(() => {
     const refCode = new URLSearchParams(window.location.search).get("ref");
-    if (refCode) {
-      localStorage.setItem("earnhub_ref_code", refCode);
-    }
+    if (refCode) localStorage.setItem("earnhub_ref_code", refCode);
   }, []);
 
   useEffect(() => {
@@ -39,7 +36,6 @@ export default function AuthPage() {
         .registerUser(mobile)
         .then(() => {
           localStorage.setItem("earnhub_mobile", mobile);
-          // Apply referral if present
           const refCode = localStorage.getItem("earnhub_ref_code");
           if (refCode) {
             actor.setReferredBy(refCode).catch(() => {});
@@ -47,10 +43,7 @@ export default function AuthPage() {
           }
           navigate("/", { replace: true });
         })
-        .catch((err: unknown) => {
-          console.error("Register error", err);
-          navigate("/", { replace: true });
-        });
+        .catch(() => navigate("/", { replace: true }));
     }
   }, [identity, actor, pendingRegistration, mobile, navigate]);
 
@@ -106,44 +99,65 @@ export default function AuthPage() {
 
   if (isInitializing) {
     return (
-      <div
-        className="flex items-center justify-center min-h-screen"
-        style={{ background: "#0F3B66" }}
-      >
-        <div className="text-white text-lg animate-pulse">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-muted-foreground text-sm animate-pulse">
+          Loading...
+        </div>
       </div>
     );
   }
 
+  const inputClass =
+    "mt-1.5 w-full px-4 py-3.5 rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder-muted-foreground/50";
+  const inputStyle = {
+    background: "rgba(255,255,255,0.07)",
+    border: "1px solid rgba(255,255,255,0.12)",
+  };
+
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{
-        background: "linear-gradient(135deg, #0F3B66 0%, #1a5a9a 100%)",
-      }}
-    >
-      <div className="flex flex-col items-center pt-16 pb-8">
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Hero Header */}
+      <div
+        className="flex flex-col items-center pt-14 pb-10 px-6"
+        style={{
+          background:
+            "linear-gradient(180deg, oklch(0.20 0.05 250) 0%, oklch(0.13 0.012 262) 100%)",
+        }}
+      >
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
-          style={{ background: "#F57C1F" }}
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-glow"
+          style={{ background: "linear-gradient(135deg, #FF6B00, #FF9500)" }}
         >
-          <TrendingUp size={32} className="text-white" />
+          <TrendingUp size={30} className="text-white" />
         </div>
-        <h1 className="text-white text-3xl font-bold">EarnHub</h1>
-        <p className="text-white/70 text-sm mt-1">Earn daily. Grow steadily.</p>
+        <h1 className="font-display text-white text-3xl font-bold tracking-tight">
+          EarnHub
+        </h1>
+        <p className="text-white/50 text-sm mt-1">Earn daily. Grow steadily.</p>
       </div>
 
-      <div className="flex-1 bg-white rounded-t-3xl px-6 py-8">
+      {/* Card */}
+      <div
+        className="flex-1 rounded-t-3xl px-6 py-7"
+        style={{
+          background: "oklch(0.17 0.016 260)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "none",
+        }}
+      >
         {step === "login" && (
           <>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <h2 className="text-2xl font-bold text-foreground mb-1">
               Welcome Back
             </h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              Sign in to your account
+            </p>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="login-mobile"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-foreground/80"
                 >
                   Mobile Number
                 </label>
@@ -154,14 +168,15 @@ export default function AuthPage() {
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                   placeholder="10-digit mobile number"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
+                  style={inputStyle}
                   data-ocid="auth.input"
                 />
               </div>
               <div>
                 <label
                   htmlFor="login-password"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-foreground/80"
                 >
                   Password
                 </label>
@@ -171,13 +186,15 @@ export default function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
+                  style={inputStyle}
                   data-ocid="auth.input"
                 />
               </div>
               {error && (
                 <p
-                  className="text-red-500 text-sm"
+                  className="text-sm"
+                  style={{ color: "#FF5555" }}
                   data-ocid="auth.error_state"
                 >
                   {error}
@@ -187,20 +204,23 @@ export default function AuthPage() {
                 type="button"
                 onClick={handleLogin}
                 disabled={isLoggingIn}
-                className="w-full py-3.5 rounded-xl text-white font-semibold text-base disabled:opacity-60"
-                style={{ background: "#0F3B66" }}
+                className="w-full py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2"
+                style={{
+                  background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+                  color: "#0D1117",
+                }}
                 data-ocid="auth.primary_button"
               >
                 {isLoggingIn ? "Connecting..." : "Login"}
               </button>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm pt-1">
                 <button
                   type="button"
                   onClick={() => {
                     setStep("forgot");
                     setError("");
                   }}
-                  className="text-blue-600"
+                  className="text-primary/80 hover:text-primary transition-colors"
                   data-ocid="auth.secondary_button"
                 >
                   Forgot Password?
@@ -211,10 +231,10 @@ export default function AuthPage() {
                     setStep("signup");
                     setError("");
                   }}
-                  className="text-blue-600 font-medium"
+                  className="text-primary font-semibold"
                   data-ocid="auth.secondary_button"
                 >
-                  Sign Up
+                  Create Account
                 </button>
               </div>
             </div>
@@ -223,17 +243,17 @@ export default function AuthPage() {
 
         {step === "signup" && (
           <>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-1">
               Create Account
             </h2>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-muted-foreground text-sm mb-6">
               Start earning daily from your investments
             </p>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="signup-mobile"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-foreground/80"
                 >
                   Mobile Number
                 </label>
@@ -244,14 +264,15 @@ export default function AuthPage() {
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                   placeholder="10-digit mobile number"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
+                  style={inputStyle}
                   data-ocid="auth.input"
                 />
               </div>
               <div>
                 <label
                   htmlFor="signup-password"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-foreground/80"
                 >
                   Password
                 </label>
@@ -261,13 +282,15 @@ export default function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimum 6 characters"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
+                  style={inputStyle}
                   data-ocid="auth.input"
                 />
               </div>
               {error && (
                 <p
-                  className="text-red-500 text-sm"
+                  className="text-sm"
+                  style={{ color: "#FF5555" }}
                   data-ocid="auth.error_state"
                 >
                   {error}
@@ -276,8 +299,11 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={handleSignup}
-                className="w-full py-3.5 rounded-xl text-white font-semibold text-base"
-                style={{ background: "#0F3B66" }}
+                className="w-full py-3.5 rounded-xl font-semibold text-sm"
+                style={{
+                  background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+                  color: "#0D1117",
+                }}
                 data-ocid="auth.primary_button"
               >
                 Get OTP
@@ -288,7 +314,7 @@ export default function AuthPage() {
                   setStep("login");
                   setError("");
                 }}
-                className="w-full text-center text-sm text-blue-600"
+                className="w-full text-center text-sm text-primary/80"
                 data-ocid="auth.secondary_button"
               >
                 Already have an account? Login
@@ -299,22 +325,28 @@ export default function AuthPage() {
 
         {step === "otp" && (
           <>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-1">
               Verify OTP
             </h2>
-            <p className="text-gray-500 text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-4">
               Enter the OTP sent to {mobile}
             </p>
             <div
-              className="mb-6 p-4 rounded-xl border-2 border-dashed"
-              style={{ borderColor: "#F57C1F", background: "#FFF3E0" }}
+              className="mb-5 p-4 rounded-xl"
+              style={{
+                background: "rgba(255,107,0,0.1)",
+                border: "1px dashed rgba(255,107,0,0.4)",
+              }}
             >
-              <p className="text-xs text-orange-600 font-medium mb-1">
-                Your OTP (for testing)
+              <p
+                className="text-xs font-medium mb-1"
+                style={{ color: "#FF9500" }}
+              >
+                Your OTP (testing)
               </p>
               <p
                 className="text-3xl font-bold tracking-widest"
-                style={{ color: "#F57C1F" }}
+                style={{ color: "#FF6B00" }}
               >
                 {generatedOtp}
               </p>
@@ -323,7 +355,7 @@ export default function AuthPage() {
               <div>
                 <label
                   htmlFor="otp-input"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-foreground/80"
                 >
                   Enter OTP
                 </label>
@@ -334,13 +366,15 @@ export default function AuthPage() {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                   placeholder="6-digit OTP"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  className={`${inputClass} text-center text-xl tracking-widest`}
+                  style={inputStyle}
                   data-ocid="auth.input"
                 />
               </div>
               {error && (
                 <p
-                  className="text-red-500 text-sm"
+                  className="text-sm"
+                  style={{ color: "#FF5555" }}
                   data-ocid="auth.error_state"
                 >
                   {error}
@@ -350,8 +384,11 @@ export default function AuthPage() {
                 type="button"
                 onClick={handleVerifyOtp}
                 disabled={isLoggingIn}
-                className="w-full py-3.5 rounded-xl text-white font-semibold text-base disabled:opacity-60"
-                style={{ background: "#0F3B66" }}
+                className="w-full py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50"
+                style={{
+                  background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+                  color: "#0D1117",
+                }}
                 data-ocid="auth.primary_button"
               >
                 {isLoggingIn ? "Verifying..." : "Verify & Continue"}
@@ -359,7 +396,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => setStep("signup")}
-                className="w-full text-center text-sm text-blue-600"
+                className="w-full text-center text-sm text-primary/80"
                 data-ocid="auth.secondary_button"
               >
                 Go Back
@@ -370,17 +407,17 @@ export default function AuthPage() {
 
         {step === "forgot" && (
           <>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-1">
               Reset Password
             </h2>
-            <p className="text-gray-500 text-sm mb-6">
-              We&apos;ll send a reset link to your mobile
+            <p className="text-muted-foreground text-sm mb-6">
+              We'll send a reset OTP to your mobile
             </p>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="forgot-mobile"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-foreground/80"
                 >
                   Mobile Number
                 </label>
@@ -391,13 +428,15 @@ export default function AuthPage() {
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                   placeholder="10-digit mobile number"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClass}
+                  style={inputStyle}
                   data-ocid="auth.input"
                 />
               </div>
               {error && (
                 <p
-                  className="text-red-500 text-sm"
+                  className="text-sm"
+                  style={{ color: "#FF5555" }}
                   data-ocid="auth.error_state"
                 >
                   {error}
@@ -406,29 +445,34 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={handleForgot}
-                className="w-full py-3.5 rounded-xl text-white font-semibold text-base"
-                style={{ background: "#0F3B66" }}
+                className="w-full py-3.5 rounded-xl font-semibold text-sm"
+                style={{
+                  background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+                  color: "#0D1117",
+                }}
                 data-ocid="auth.primary_button"
               >
                 Send Reset OTP
               </button>
               {generatedOtp && (
                 <div
-                  className="p-4 rounded-xl border-2 border-dashed"
-                  style={{ borderColor: "#F57C1F", background: "#FFF3E0" }}
+                  className="p-4 rounded-xl"
+                  style={{
+                    background: "rgba(255,107,0,0.1)",
+                    border: "1px dashed rgba(255,107,0,0.4)",
+                  }}
                 >
-                  <p className="text-xs text-orange-600 font-medium mb-1">
-                    Reset OTP (for testing)
+                  <p
+                    className="text-xs font-medium mb-1"
+                    style={{ color: "#FF9500" }}
+                  >
+                    Reset OTP (testing)
                   </p>
                   <p
                     className="text-3xl font-bold tracking-widest"
-                    style={{ color: "#F57C1F" }}
+                    style={{ color: "#FF6B00" }}
                   >
                     {generatedOtp}
-                  </p>
-                  <p className="text-xs text-orange-700 mt-2">
-                    Use this OTP to verify. In a real app, this would be sent
-                    via SMS.
                   </p>
                 </div>
               )}
@@ -439,7 +483,7 @@ export default function AuthPage() {
                   setError("");
                   setGeneratedOtp("");
                 }}
-                className="w-full text-center text-sm text-blue-600"
+                className="w-full text-center text-sm text-primary/80"
                 data-ocid="auth.secondary_button"
               >
                 Back to Login

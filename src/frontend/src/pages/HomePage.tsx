@@ -1,66 +1,38 @@
 import { useEffect, useState } from "react";
-import type { DepositRequest, Plan, UserProfile } from "../backend";
-import { Variant_pending_approved_rejected } from "../backend";
+import type { Plan, UserProfile } from "../backend";
 import PaymentModal from "../components/PaymentModal";
 import { useActor } from "../hooks/useActor";
 
-const PLAN_STYLES = [
-  { bg: "#18A6A0", icon: "₹" },
-  { bg: "#2C6FC4", icon: "📈" },
-  { bg: "#F57C1F", icon: "⭐" },
+const PLAN_GRADIENTS = [
+  { from: "#1E3A5F", to: "#2C5AA0", accent: "#00C9A7", badge: "STARTER" },
+  { from: "#1A3A2A", to: "#1E6B42", accent: "#4ADE80", badge: "POPULAR" },
+  { from: "#3B1F00", to: "#7A3D00", accent: "#FF6B00", badge: "PREMIUM" },
 ];
 
 const FALLBACK_PLANS: Plan[] = [
-  {
-    id: 1n,
-    name: "Basic Plan",
-    price: 500n,
-    dailyEarning: 150n,
-    validityDays: 60n,
-  },
+  { id: 1n, name: "Basic", price: 500n, dailyEarning: 150n, validityDays: 60n },
   {
     id: 2n,
-    name: "Standard Plan",
+    name: "Standard",
     price: 1000n,
     dailyEarning: 300n,
     validityDays: 60n,
   },
   {
     id: 3n,
-    name: "Premium Plan",
+    name: "Premium",
     price: 1750n,
     dailyEarning: 750n,
     validityDays: 120n,
   },
 ];
 
-function depositStatusBadge(status: Variant_pending_approved_rejected) {
-  if (status === Variant_pending_approved_rejected.approved)
-    return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-        Approved
-      </span>
-    );
-  if (status === Variant_pending_approved_rejected.rejected)
-    return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-        Rejected
-      </span>
-    );
-  return (
-    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
-      Pending
-    </span>
-  );
-}
-
 export default function HomePage() {
   const { actor } = useActor();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [plans, setPlans] = useState<Plan[]>(FALLBACK_PLANS);
-  const [deposits, setDeposits] = useState<DepositRequest[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const mobile = localStorage.getItem("earnhub_mobile") || "User";
+  const mobile = localStorage.getItem("earnhub_mobile") || "Member";
 
   useEffect(() => {
     if (!actor) return;
@@ -82,16 +54,8 @@ export default function HomePage() {
             .catch(() => {}),
           actor
             .getAllPlans()
-            .then((fetchedPlans) => {
-              if (fetchedPlans && fetchedPlans.length > 0) {
-                setPlans(fetchedPlans);
-              }
-            })
-            .catch(() => {}),
-          actor
-            .getCallerDepositRequests()
-            .then((all) => {
-              setDeposits(all);
+            .then((fetched) => {
+              if (fetched?.length > 0) setPlans(fetched);
             })
             .catch(() => {}),
         ]);
@@ -113,111 +77,166 @@ export default function HomePage() {
           ),
       )
     : 0;
-
-  const recentDeposits = [...deposits].reverse().slice(0, 5);
+  const progressPct = activePlanDetails
+    ? Math.min(
+        100,
+        Math.round(
+          ((Number(activePlanDetails.validityDays) - daysRemaining) /
+            Number(activePlanDetails.validityDays)) *
+            100,
+        ),
+      )
+    : 0;
 
   return (
     <div className="px-4 py-5 pb-8">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">My Wallet</h1>
-        <p className="text-gray-600 text-sm mt-0.5">Hi, {mobile} 👋</p>
-      </div>
-      <div
-        className="rounded-2xl p-5 mb-6 shadow-lg"
-        style={{
-          background: "linear-gradient(135deg, #2F73C8 0%, #1a52a0 100%)",
-        }}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <p className="text-white/70 text-sm">Total Balance</p>
-            <p
-              className="text-white text-4xl font-extrabold mt-1"
-              data-ocid="wallet.balance"
-            >
-              ₹{balance.toLocaleString("en-IN")}
-            </p>
-          </div>
-          <span className="text-xs bg-white/20 text-white px-3 py-1 rounded-full">
-            Current Wallet
-          </span>
-        </div>
-        {activePlanDetails && (
-          <p className="text-white/80 text-xs">
-            Active Plan: {activePlanDetails.name} • ₹
-            {Number(activePlanDetails.dailyEarning)}/day
+      {/* Greeting + Balance Card */}
+      <div className="mb-5">
+        <p className="text-xs text-muted-foreground mb-0.5">Welcome back,</p>
+        <h1 className="text-lg font-bold text-foreground mb-4">{mobile} 👋</h1>
+        <div
+          className="rounded-2xl p-5 relative overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.28 0.10 250), oklch(0.20 0.06 260))",
+          }}
+        >
+          {/* decorative circles */}
+          <div
+            className="absolute -right-6 -top-6 w-24 h-24 rounded-full"
+            style={{ background: "rgba(255,107,0,0.12)" }}
+          />
+          <div
+            className="absolute -right-2 -bottom-4 w-16 h-16 rounded-full"
+            style={{ background: "rgba(0,201,167,0.1)" }}
+          />
+          <p className="text-white/60 text-xs mb-1">Total Balance</p>
+          <p
+            className="text-white text-4xl font-bold tracking-tight"
+            data-ocid="wallet.balance"
+          >
+            ₹{balance.toLocaleString("en-IN")}
           </p>
-        )}
+          {activePlanDetails && (
+            <div className="mt-3 flex items-center gap-2">
+              <div
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{ background: "#00C9A7" }}
+              />
+              <p className="text-white/70 text-xs">
+                {activePlanDetails.name} · ₹
+                {Number(activePlanDetails.dailyEarning)}/day
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {recentDeposits.length > 0 && (
+      {/* Active Plan Progress */}
+      {activePlanDetails && (
         <div
-          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-5"
-          data-ocid="deposits.panel"
+          className="rounded-2xl p-4 mb-5 border border-white/8"
+          style={{ background: "oklch(0.17 0.016 260)" }}
         >
-          <h3
-            className="text-sm font-bold text-gray-900 mb-3"
-            style={{ borderBottom: "2px solid #2F73C8", paddingBottom: 6 }}
-          >
-            Recent Deposits
-          </h3>
-          <div className="space-y-2" data-ocid="deposits.list">
-            {recentDeposits.map((d, idx) => (
-              <div
-                key={`${d.utrNumber}-${d.submittedAt.toString()}`}
-                className="flex items-center justify-between"
-                data-ocid={`deposits.item.${idx + 1}`}
-              >
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">
-                    ₹{Number(d.amount).toLocaleString("en-IN")}
-                  </p>
-                  <p className="text-xs text-gray-400">UTR: {d.utrNumber}</p>
-                </div>
-                {depositStatusBadge(d.status)}
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-foreground/80">
+              Active Plan: {activePlanDetails.name}
+            </span>
+            <span className="text-xs font-bold" style={{ color: "#FF6B00" }}>
+              {daysRemaining} days left
+            </span>
           </div>
+          <div
+            className="w-full h-2 rounded-full"
+            style={{ background: "rgba(255,255,255,0.08)" }}
+          >
+            <div
+              className="h-2 rounded-full transition-all"
+              style={{
+                width: `${progressPct}%`,
+                background: "linear-gradient(90deg, #FF6B00, #00C9A7)",
+              }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1.5">
+            ₹{Number(activePlanDetails.dailyEarning)}/day · {progressPct}%
+            complete
+          </p>
         </div>
       )}
 
+      {/* Available Plans */}
       <div className="mb-5">
-        <h2 className="text-lg font-bold text-gray-900 mb-3">
-          Available Plans
-        </h2>
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold text-foreground">
+            Available Plans
+          </h2>
+          <span
+            className="text-xs px-2 py-0.5 rounded-full"
+            style={{ background: "rgba(255,107,0,0.15)", color: "#FF6B00" }}
+          >
+            Instant Returns
+          </span>
+        </div>
+        <div className="space-y-3">
           {plans.map((plan, i) => {
-            const style = PLAN_STYLES[i % PLAN_STYLES.length];
+            const g = PLAN_GRADIENTS[i % PLAN_GRADIENTS.length];
+            const totalReturn =
+              Number(plan.dailyEarning) * Number(plan.validityDays);
             return (
               <div
                 key={plan.id.toString()}
-                className="rounded-2xl p-3 flex flex-col shadow-md"
-                style={{ background: style.bg }}
+                className="rounded-2xl p-4 relative overflow-hidden"
+                style={{
+                  background: `linear-gradient(135deg, ${g.from}, ${g.to})`,
+                  border: `1px solid ${g.accent}25`,
+                }}
                 data-ocid={`plans.item.${i + 1}`}
               >
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mb-2">
-                  <span className="text-white text-sm">{style.icon}</span>
+                <div
+                  className="absolute top-0 right-0 px-2.5 py-1 rounded-bl-xl text-xs font-bold"
+                  style={{ background: `${g.accent}25`, color: g.accent }}
+                >
+                  {g.badge}
                 </div>
-                <p className="text-white text-xs font-semibold leading-tight">
-                  {plan.name}
-                </p>
-                <p className="text-white font-extrabold text-lg leading-tight mt-1">
-                  ₹{Number(plan.price).toLocaleString("en-IN")}
-                </p>
-                <p className="text-white/80 text-xs mt-1">
-                  ₹{Number(plan.dailyEarning)}/day
-                </p>
-                <p className="text-white/70 text-xs">
-                  {Number(plan.validityDays)} days
-                </p>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-white font-bold text-base mb-0.5">
+                      {plan.name} Plan
+                    </h3>
+                    <p className="text-white/60 text-xs">
+                      {Number(plan.validityDays)} days validity
+                    </p>
+                    <div className="flex items-baseline gap-1 mt-2">
+                      <span className="text-white text-2xl font-bold">
+                        ₹{Number(plan.price).toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-white/50 text-xs">investment</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs mb-0.5" style={{ color: g.accent }}>
+                      Daily Earn
+                    </p>
+                    <p
+                      className="text-xl font-bold"
+                      style={{ color: g.accent }}
+                    >
+                      ₹{Number(plan.dailyEarning)}
+                    </p>
+                    <p className="text-white/40 text-xs mt-1">
+                      Total: ₹{totalReturn.toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={() => setSelectedPlan(plan)}
-                  className="mt-2 w-full py-1.5 rounded-lg text-xs font-bold"
-                  style={{ background: "#F2A11B", color: "#111827" }}
+                  className="mt-3 w-full py-2.5 rounded-xl text-sm font-bold transition-all active:scale-98"
+                  style={{ background: g.accent, color: "#0D1117" }}
                   data-ocid={`plans.primary_button.${i + 1}`}
                 >
-                  Buy Now
+                  Buy Now — ₹{Number(plan.price).toLocaleString("en-IN")}
                 </button>
               </div>
             );
@@ -225,33 +244,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {activePlanDetails && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <h3
-            className="text-sm font-bold text-gray-900 mb-2"
-            style={{ borderBottom: "2px solid #F57C1F", paddingBottom: 6 }}
-          >
-            Active Subscription
-          </h3>
-          <div className="flex justify-between items-center text-sm">
-            <div>
-              <p className="font-semibold text-gray-800">
-                {activePlanDetails.name}
-              </p>
-              <p className="text-gray-500 text-xs mt-0.5">
-                ₹{Number(activePlanDetails.dailyEarning)} daily earning
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold" style={{ color: "#F57C1F" }}>
-                {daysRemaining}
-              </p>
-              <p className="text-xs text-gray-500">days left</p>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Payment Modal */}
       {selectedPlan && (
         <PaymentModal
           plan={selectedPlan}
@@ -275,14 +268,13 @@ export default function HomePage() {
         />
       )}
 
-      {/* Footer */}
-      <footer className="mt-12 text-center text-xs text-gray-400">
+      <footer className="mt-10 text-center text-xs text-muted-foreground/50">
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-gray-600"
+          className="underline hover:text-muted-foreground transition-colors"
         >
           caffeine.ai
         </a>

@@ -1,4 +1,4 @@
-import { ArrowUpFromLine, TrendingUp } from "lucide-react";
+import { ArrowUpFromLine, TrendingUp, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   type Plan,
@@ -11,21 +11,30 @@ import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useNavigate } from "../hooks/useRouter";
 
 function statusBadge(status: Variant_pending_completed_rejected) {
-  if (status === Variant_pending_completed_rejected.completed)
-    return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-        Completed
-      </span>
-    );
-  if (status === Variant_pending_completed_rejected.rejected)
-    return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-        Rejected
-      </span>
-    );
+  const map = {
+    [Variant_pending_completed_rejected.completed]: {
+      label: "Completed",
+      color: "#00C9A7",
+      bg: "rgba(0,201,167,0.15)",
+    },
+    [Variant_pending_completed_rejected.rejected]: {
+      label: "Rejected",
+      color: "#FF5555",
+      bg: "rgba(255,85,85,0.15)",
+    },
+    [Variant_pending_completed_rejected.pending]: {
+      label: "Pending",
+      color: "#FF9500",
+      bg: "rgba(255,149,0,0.15)",
+    },
+  };
+  const s = map[status] ?? map[Variant_pending_completed_rejected.pending];
   return (
-    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
-      Pending
+    <span
+      className="px-2.5 py-1 rounded-full text-xs font-semibold"
+      style={{ color: s.color, background: s.bg }}
+    >
+      {s.label}
     </span>
   );
 }
@@ -65,13 +74,11 @@ export default function WalletPage() {
         .getAllWithdrawalRequests()
         .then((all) => {
           const callerPrincipal = identity?.getPrincipal().toString();
-          if (callerPrincipal) {
-            setWithdrawals(
-              all.filter((w) => w.user.toString() === callerPrincipal),
-            );
-          } else {
-            setWithdrawals(all);
-          }
+          setWithdrawals(
+            callerPrincipal
+              ? all.filter((w) => w.user.toString() === callerPrincipal)
+              : all,
+          );
         })
         .catch(() => {}),
     ]).finally(() => setLoading(false));
@@ -88,126 +95,150 @@ export default function WalletPage() {
           (86400 * 1e15),
       )
     : 0;
+  const estimatedEarnings = activePlan
+    ? daysActive * Number(activePlan.dailyEarning)
+    : 0;
 
   return (
     <div className="px-4 py-5 pb-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-5">Wallet</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-5">Wallet</h1>
+
+      {/* Balance Card */}
       <div
-        className="rounded-2xl p-5 mb-5 shadow-lg"
+        className="rounded-2xl p-5 mb-5 relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #2F73C8 0%, #1a52a0 100%)",
+          background:
+            "linear-gradient(135deg, oklch(0.28 0.10 250), oklch(0.20 0.06 260))",
         }}
       >
-        <p className="text-white/70 text-sm">Available Balance</p>
+        <div
+          className="absolute -right-4 -top-4 w-20 h-20 rounded-full"
+          style={{ background: "rgba(255,107,0,0.1)" }}
+        />
+        <div className="flex items-center gap-2 mb-2">
+          <Wallet size={14} className="text-white/60" />
+          <p className="text-white/60 text-xs">Available Balance</p>
+        </div>
         <p
-          className="text-white text-4xl font-extrabold mt-1"
+          className="text-white text-4xl font-bold tracking-tight mb-1"
           data-ocid="wallet.balance"
         >
           ₹{balance.toLocaleString("en-IN")}
         </p>
         {activePlan && (
-          <p className="text-white/70 text-xs mt-2">
-            Earning ₹{Number(activePlan.dailyEarning)}/day • {daysActive} days
+          <p className="text-white/60 text-xs">
+            Earning ₹{Number(activePlan.dailyEarning)}/day · {daysActive} days
             active
           </p>
         )}
       </div>
+
+      {/* Earnings Breakdown */}
       {activePlan && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-5">
+        <div
+          className="rounded-2xl p-4 mb-5 border border-white/8"
+          style={{ background: "oklch(0.17 0.016 260)" }}
+        >
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp size={18} style={{ color: "#18A6A0" }} />
-            <h3 className="text-sm font-bold text-gray-900">
+            <TrendingUp size={15} style={{ color: "#00C9A7" }} />
+            <h3 className="text-sm font-bold text-foreground">
               Earnings Breakdown
             </h3>
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Plan</span>
-              <span className="font-semibold text-gray-800">
-                {activePlan.name}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Daily Rate</span>
-              <span className="font-semibold text-gray-800">
-                ₹{Number(activePlan.dailyEarning)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Days Active</span>
-              <span className="font-semibold text-gray-800">{daysActive}</span>
-            </div>
-            <div className="flex justify-between text-sm border-t pt-2 mt-1">
-              <span className="text-gray-700 font-medium">
+            {[
+              { label: "Plan", value: activePlan.name },
+              {
+                label: "Daily Rate",
+                value: `₹${Number(activePlan.dailyEarning)}`,
+              },
+              { label: "Days Active", value: daysActive.toString() },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{label}</span>
+                <span className="font-semibold text-foreground">{value}</span>
+              </div>
+            ))}
+            <div
+              className="flex justify-between text-sm pt-2"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <span className="text-foreground font-medium">
                 Estimated Earnings
               </span>
-              <span className="font-bold" style={{ color: "#18A6A0" }}>
-                ₹{daysActive * Number(activePlan.dailyEarning)}
+              <span className="font-bold" style={{ color: "#00C9A7" }}>
+                ₹{estimatedEarnings.toLocaleString("en-IN")}
               </span>
             </div>
           </div>
         </div>
       )}
+
+      {/* Withdraw CTA */}
       <button
         type="button"
         onClick={() => navigate("/withdraw")}
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-semibold mb-5"
-        style={{ background: "#0F3B66" }}
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm mb-5 transition-all active:scale-98"
+        style={{
+          background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+          color: "#0D1117",
+        }}
         data-ocid="wallet.primary_button"
       >
-        <ArrowUpFromLine size={18} />
+        <ArrowUpFromLine size={17} />
         Request Withdrawal
       </button>
-      <div>
-        <h3 className="text-sm font-bold text-gray-900 mb-3">
-          Withdrawal History
-        </h3>
-        {loading ? (
-          <div
-            className="text-gray-400 text-sm"
-            data-ocid="wallet.loading_state"
-          >
-            Loading...
-          </div>
-        ) : withdrawals.length === 0 ? (
-          <div
-            className="text-center py-8 text-gray-400 text-sm"
-            data-ocid="wallet.empty_state"
-          >
-            No withdrawals yet
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {[...withdrawals]
-              .reverse()
-              .slice(0, 10)
-              .map((w, idx) => (
-                <div
-                  key={`${w.upiId}-${w.requestedAt.toString()}`}
-                  className="bg-white rounded-xl p-3 shadow-sm flex items-center justify-between"
-                  data-ocid={`wallet.item.${idx + 1}`}
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">
-                      ₹{Number(w.amount).toLocaleString("en-IN")}
-                    </p>
-                    <p className="text-xs text-gray-500">{w.upiId}</p>
-                  </div>
-                  {statusBadge(w.status)}
-                </div>
-              ))}
-          </div>
-        )}
-      </div>
 
-      {/* Footer */}
-      <footer className="mt-12 text-center text-xs text-gray-400">
+      {/* Withdrawal History */}
+      <h3 className="text-sm font-bold text-foreground mb-3">
+        Withdrawal History
+      </h3>
+      {loading ? (
+        <div
+          className="text-muted-foreground text-sm"
+          data-ocid="wallet.loading_state"
+        >
+          Loading...
+        </div>
+      ) : withdrawals.length === 0 ? (
+        <div
+          className="text-center py-8 text-muted-foreground text-sm"
+          data-ocid="wallet.empty_state"
+        >
+          <div className="text-3xl mb-2">💸</div>
+          No withdrawals yet
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {[...withdrawals]
+            .reverse()
+            .slice(0, 10)
+            .map((w, idx) => (
+              <div
+                key={`${w.upiId}-${w.requestedAt.toString()}`}
+                className="rounded-xl p-3.5 flex items-center justify-between border border-white/6"
+                style={{ background: "oklch(0.17 0.016 260)" }}
+                data-ocid={`wallet.item.${idx + 1}`}
+              >
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    ₹{Number(w.amount).toLocaleString("en-IN")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{w.upiId}</p>
+                </div>
+                {statusBadge(w.status)}
+              </div>
+            ))}
+        </div>
+      )}
+
+      <footer className="mt-10 text-center text-xs text-muted-foreground/50">
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-gray-600"
+          className="underline hover:text-muted-foreground transition-colors"
         >
           caffeine.ai
         </a>

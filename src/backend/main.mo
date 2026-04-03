@@ -7,9 +7,13 @@ import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 import Iter "mo:core/Iter";
 import Text "mo:core/Text";
+import Migration "migration";
+import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import MixinStorage "blob-storage/Mixin";
 
+(with migration = Migration.run)
 actor {
   // Types
   type PlanId = Nat;
@@ -76,6 +80,19 @@ actor {
     submittedAt : Int;
   };
 
+  public type Testimonial = {
+    author : Text;
+    timestamp : Int;
+    content : Text;
+  };
+
+  public type Link = {
+    id : Nat;
+    url : Text;
+    title : Text;
+    submittedBy : Text;
+  };
+
   // Internal State — unchanged from previous version for upgrade compatibility
   module State {
     public type State = {
@@ -89,6 +106,8 @@ actor {
       depositRequests : Map.Map<Nat, DepositRequest>;
       users : Map.Map<Principal, User>;
       validated : Map.Map<UTRNumber, PlanId>;
+      testimonials : Map.Map<Nat, Testimonial>;
+      links : Map.Map<Nat, Link>;
     };
 
     public func init() : State {
@@ -102,6 +121,8 @@ actor {
         withdrawalRequests = Map.empty<Nat, WithdrawalRequest>();
         depositRequests = Map.empty<Nat, DepositRequest>();
         users = Map.empty<Principal, User>();
+        testimonials = Map.empty<Nat, Testimonial>();
+        links = Map.empty<Nat, Link>();
         validated = Map.empty<UTRNumber, PlanId>();
       };
     };
@@ -118,6 +139,7 @@ actor {
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+  include MixinStorage();
 
   func currentTime() : Int {
     Time.now() / 1_000_000_000;
@@ -201,7 +223,10 @@ actor {
     state.plans.values().toArray();
   };
 
-  public shared func ensureDefaultPlans() : async () {
+  public shared ({ caller }) func ensureDefaultPlans() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can initialize default plans");
+    };
     let defaultPlans : [(PlanId, Text, Nat, Nat, Nat)] = [
       (1, "Basic Plan", 500, 150, 30),
       (2, "Standard Plan", 1000, 300, 60),
@@ -262,7 +287,7 @@ actor {
             let updatedUser : User = { user with activePlan = ?activePlan };
             state.users.add(submission.user, updatedUser);
 
-            // Referral bonus: credit \u20b9500 to referrer when Basic Plan (\u20b9500) approved for referred user
+            // Referral bonus: credit ₹500 to referrer when Basic Plan (₹500) approved for referred user
             switch (state.plans.get(submission.planId)) {
               case (?plan) {
                 if (plan.price == 500) {
@@ -402,8 +427,49 @@ actor {
     };
   };
 
+  public shared ({ caller }) func addTestimonial(author : Text, content : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized. Only admins can add testimonials.");
+    };
+    let testimonial = {
+      author;
+      content;
+      timestamp = currentTime();
+    };
+    state.testimonials.add(state.nextPlanId, testimonial);
+    state.nextPlanId += 1;
+  };
+
+  public query ({ caller }) func getTestimonials() : async [Testimonial] {
+    state.testimonials.values().toArray();
+  };
+
+  // Indexed
+  public query ({ caller }) func getTestimonialByAuthor(author : Text) : async ?Testimonial {
+    state.testimonials.values().find(func(testimonial) { testimonial.author == author });
+  };
+
+  public shared ({ caller }) func addLink(url : Text, title : Text, submittedBy : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized. Only users can add links.");
+    };
+    let link = {
+      id = state.nextPlanId;
+      url;
+      title;
+      submittedBy;
+    };
+    state.links.add(state.nextPlanId, link);
+    state.nextPlanId += 1;
+  };
+
+  public query func getLinks() : async [Link] {
+    state.links.values().toArray();
+  };
+
   // USER FUNCTIONS
   public shared ({ caller }) func registerUser(mobile : Text) : async () {
+    // Registration is open to all (including guests/anonymous)
     if (state.users.containsKey(caller)) {
       Runtime.trap("User already registered");
     };
@@ -562,6 +628,9 @@ actor {
 
   // Store that the caller was referred by the owner of referralPrincipal text
   public shared ({ caller }) func setReferredBy(referralPrincipal : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can set referral information");
+    };
     // Silently ignore if already set
     if (referredBy.containsKey(caller)) { return };
     // Caller must be a registered user
@@ -576,6 +645,9 @@ actor {
 
   // Get referral stats for the caller
   public query ({ caller }) func getCallerReferralStats() : async { totalReferrals : Nat; totalEarnings : Nat } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view referral stats");
+    };
     let totalReferrals = switch (referralCount.get(caller)) {
       case (?n) { n };
       case (null) { 0 };
@@ -585,5 +657,31 @@ actor {
       case (null) { 0 };
     };
     { totalReferrals; totalEarnings };
+  };
+
+  // Content Management for Files
+  public type FileContent = {
+      name : Text;
+      blob : Storage.ExternalBlob;
+  };
+
+  let content = Map.empty<Text, FileContent>();
+  public shared ({ caller }) func addFile(name : Text, blob : Storage.ExternalBlob) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Access Denied. Only users can upload files.");
+    };
+    let fileContent : FileContent = {
+      name;
+      blob;
+    };
+    content.add(name, fileContent);
+  };
+
+  public query func getFile(name : Text) : async ?FileContent {
+    content.get(name);
+  };
+
+  public query func getAllFiles() : async [FileContent] {
+    content.values().toArray();
   };
 };

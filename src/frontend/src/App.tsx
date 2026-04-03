@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import Layout from "./components/Layout";
@@ -56,11 +57,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isInitializing) {
     return (
-      <div
-        className="flex items-center justify-center min-h-screen"
-        style={{ background: "#0F3B66" }}
-      >
-        <div className="text-white text-lg animate-pulse">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center animate-pulse">
+            <span className="text-2xl">💰</span>
+          </div>
+          <p className="text-muted-foreground text-sm">Loading EarnHub...</p>
+        </div>
       </div>
     );
   }
@@ -106,6 +109,7 @@ export default function App() {
   return (
     <RouterProvider>
       <AppRoutes />
+      <Toaster position="top-center" theme="dark" />
     </RouterProvider>
   );
 }

@@ -24,6 +24,14 @@ export interface DepositRequest {
   'utrNumber' : UTRNumber,
   'amount' : bigint,
 }
+export type ExternalBlob = Uint8Array;
+export interface FileContent { 'blob' : ExternalBlob, 'name' : string }
+export interface Link {
+  'id' : bigint,
+  'url' : string,
+  'title' : string,
+  'submittedBy' : string,
+}
 export type PaymentApp = { 'Paytm' : null } |
   { 'PhonePe' : null } |
   { 'GooglePay' : null };
@@ -45,6 +53,11 @@ export interface Plan {
   'price' : bigint,
 }
 export type PlanId = bigint;
+export interface Testimonial {
+  'content' : string,
+  'author' : string,
+  'timestamp' : bigint,
+}
 export type UTRNumber = string;
 export interface User {
   'principal' : Principal,
@@ -71,15 +84,45 @@ export interface WithdrawalRequest {
   'amount' : bigint,
   'requestedAt' : bigint,
 }
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addFile' : ActorMethod<[string, ExternalBlob], undefined>,
+  'addLink' : ActorMethod<[string, string, string], undefined>,
   'addPlan' : ActorMethod<[string, bigint, bigint, bigint], PlanId>,
+  'addTestimonial' : ActorMethod<[string, string], undefined>,
   'approveDepositRequest' : ActorMethod<[bigint], undefined>,
   'approvePaymentSubmission' : ActorMethod<[bigint], undefined>,
   'approveWithdrawalRequest' : ActorMethod<[bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'ensureDefaultPlans' : ActorMethod<[], undefined>,
   'getAllDepositRequests' : ActorMethod<[], Array<DepositRequest>>,
+  'getAllFiles' : ActorMethod<[], Array<FileContent>>,
   'getAllPaymentSubmissions' : ActorMethod<[], Array<PaymentSubmission>>,
   'getAllPlans' : ActorMethod<[], Array<Plan>>,
   'getAllWithdrawalRequests' : ActorMethod<[], Array<WithdrawalRequest>>,
@@ -91,6 +134,10 @@ export interface _SERVICE {
   >,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getFile' : ActorMethod<[string], [] | [FileContent]>,
+  'getLinks' : ActorMethod<[], Array<Link>>,
+  'getTestimonialByAuthor' : ActorMethod<[string], [] | [Testimonial]>,
+  'getTestimonials' : ActorMethod<[], Array<Testimonial>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'registerUser' : ActorMethod<[string], undefined>,

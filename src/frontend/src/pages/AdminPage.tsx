@@ -3,10 +3,10 @@ import {
   Copy,
   LogOut,
   Plus,
-  TrendingUp,
+  RefreshCw,
   XCircle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   type DepositRequest,
   type PaymentSubmission,
@@ -22,48 +22,68 @@ type Tab = "payments" | "withdrawals" | "deposits" | "plans";
 const ADMIN_USER = "admin";
 const ADMIN_PASS = "admin123";
 
-function StatusBadgePAR({
-  status,
-}: { status: Variant_pending_approved_rejected }) {
-  if (status === Variant_pending_approved_rejected.approved)
-    return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-        Approved
-      </span>
-    );
-  if (status === Variant_pending_approved_rejected.rejected)
-    return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-        Rejected
-      </span>
-    );
+function Badge({
+  label,
+  color,
+  bg,
+}: { label: string; color: string; bg: string }) {
   return (
-    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
-      Pending
+    <span
+      className="px-2.5 py-1 rounded-full text-xs font-semibold"
+      style={{ color, background: bg }}
+    >
+      {label}
     </span>
   );
 }
 
-function StatusBadgePCR({
-  status,
-}: { status: Variant_pending_completed_rejected }) {
-  if (status === Variant_pending_completed_rejected.completed)
-    return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-        Completed
-      </span>
-    );
-  if (status === Variant_pending_completed_rejected.rejected)
-    return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-        Rejected
-      </span>
-    );
-  return (
-    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
-      Pending
-    </span>
-  );
+function StatusPAR({ status }: { status: Variant_pending_approved_rejected }) {
+  const map = {
+    [Variant_pending_approved_rejected.approved]: {
+      label: "Approved",
+      color: "#00C9A7",
+      bg: "rgba(0,201,167,0.15)",
+    },
+    [Variant_pending_approved_rejected.rejected]: {
+      label: "Rejected",
+      color: "#FF5555",
+      bg: "rgba(255,85,85,0.15)",
+    },
+    [Variant_pending_approved_rejected.pending]: {
+      label: "Pending",
+      color: "#FF9500",
+      bg: "rgba(255,149,0,0.15)",
+    },
+  };
+  const s = map[status] ?? map[Variant_pending_approved_rejected.pending];
+  return <Badge {...s} />;
+}
+
+function StatusPCR({ status }: { status: Variant_pending_completed_rejected }) {
+  const map = {
+    [Variant_pending_completed_rejected.completed]: {
+      label: "Completed",
+      color: "#00C9A7",
+      bg: "rgba(0,201,167,0.15)",
+    },
+    [Variant_pending_completed_rejected.rejected]: {
+      label: "Rejected",
+      color: "#FF5555",
+      bg: "rgba(255,85,85,0.15)",
+    },
+    [Variant_pending_completed_rejected.pending]: {
+      label: "Pending",
+      color: "#FF9500",
+      bg: "rgba(255,149,0,0.15)",
+    },
+  };
+  const s = map[status] ?? map[Variant_pending_completed_rejected.pending];
+  return <Badge {...s} />;
+}
+
+function shortPrincipal(p: { toString(): string }) {
+  const s = p.toString();
+  return s.length > 16 ? `${s.slice(0, 8)}...${s.slice(-6)}` : s;
 }
 
 export default function AdminPage() {
@@ -85,7 +105,6 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  // New plan form
   const [showAddPlan, setShowAddPlan] = useState(false);
   const [newPlan, setNewPlan] = useState({
     name: "",
@@ -94,11 +113,9 @@ export default function AdminPage() {
     validityDays: "",
   });
   const [addingPlan, setAddingPlan] = useState(false);
-
-  // Copy UPI feedback
   const [copiedUpi, setCopiedUpi] = useState<string | null>(null);
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     if (!actor) return;
     setLoading(true);
     try {
@@ -113,41 +130,18 @@ export default function AdminPage() {
       setDeposits(d);
       setPlans(pl);
       const edits: Record<string, Plan> = {};
-      for (const plan of pl) {
-        edits[plan.id.toString()] = { ...plan };
-      }
+      for (const plan of pl) edits[plan.id.toString()] = { ...plan };
       setPlanEdits(edits);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [actor]);
 
   useEffect(() => {
-    if (isLoggedIn && actor) {
-      setLoading(true);
-      Promise.all([
-        actor.getAllPaymentSubmissions(),
-        actor.getAllWithdrawalRequests(),
-        actor.getAllDepositRequests(),
-        actor.getAllPlans(),
-      ])
-        .then(([p, w, d, pl]) => {
-          setPayments(p);
-          setWithdrawals(w);
-          setDeposits(d);
-          setPlans(pl);
-          const edits: Record<string, Plan> = {};
-          for (const plan of pl) {
-            edits[plan.id.toString()] = { ...plan };
-          }
-          setPlanEdits(edits);
-        })
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    }
-  }, [isLoggedIn, actor]);
+    if (isLoggedIn && actor) fetchAll();
+  }, [isLoggedIn, actor, fetchAll]);
 
   const handleLogin = () => {
     if (username === ADMIN_USER && password === ADMIN_PASS) {
@@ -176,21 +170,19 @@ export default function AdminPage() {
     }
   };
 
-  const savePlan = async (planId: bigint) => {
+  const savePlan = async (plan: Plan) => {
     if (!actor) return;
-    const edit = planEdits[planId.toString()];
-    if (!edit) return;
-    const key = `save-${planId}`;
+    const key = `save-${plan.id.toString()}`;
     setActionLoading(key);
     try {
       await actor.updatePlan(
-        planId,
-        edit.name,
-        BigInt(edit.price),
-        BigInt(edit.dailyEarning),
-        BigInt(edit.validityDays),
+        plan.id,
+        plan.name,
+        plan.price,
+        plan.dailyEarning,
+        plan.validityDays,
       );
-      setSaveMsg("Plan updated successfully!");
+      setSaveMsg(`Plan "${plan.name}" updated!`);
       setTimeout(() => setSaveMsg(null), 3000);
       await fetchAll();
     } catch (e) {
@@ -201,23 +193,24 @@ export default function AdminPage() {
   };
 
   const addNewPlan = async () => {
-    if (!actor) return;
-    const price = Number(newPlan.price);
-    const daily = Number(newPlan.dailyEarning);
-    const days = Number(newPlan.validityDays);
-    if (!newPlan.name || !price || !daily || !days) return;
+    if (
+      !actor ||
+      !newPlan.name ||
+      !newPlan.price ||
+      !newPlan.dailyEarning ||
+      !newPlan.validityDays
+    )
+      return;
     setAddingPlan(true);
     try {
       await actor.addPlan(
         newPlan.name,
-        BigInt(price),
-        BigInt(daily),
-        BigInt(days),
+        BigInt(Number.parseInt(newPlan.price)),
+        BigInt(Number.parseInt(newPlan.dailyEarning)),
+        BigInt(Number.parseInt(newPlan.validityDays)),
       );
       setNewPlan({ name: "", price: "", dailyEarning: "", validityDays: "" });
       setShowAddPlan(false);
-      setSaveMsg("Plan added successfully!");
-      setTimeout(() => setSaveMsg(null), 3000);
       await fetchAll();
     } catch (e) {
       console.error(e);
@@ -226,80 +219,103 @@ export default function AdminPage() {
     }
   };
 
-  const copyUpi = (upi: string) => {
-    navigator.clipboard.writeText(upi).catch(() => {});
-    setCopiedUpi(upi);
+  const copyUpi = (upiId: string) => {
+    navigator.clipboard.writeText(upiId).catch(() => {
+      const el = document.createElement("textarea");
+      el.value = upiId;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    });
+    setCopiedUpi(upiId);
     setTimeout(() => setCopiedUpi(null), 2000);
   };
 
-  const shortPrincipal = (p: { toString: () => string }) => {
-    const s = p.toString();
-    return s.length > 12 ? `${s.slice(0, 6)}...${s.slice(-4)}` : s;
+  const inputClass =
+    "w-full px-3 py-2.5 rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50";
+  const inputStyle = {
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.1)",
   };
 
+  // ─── Login Screen ────────────────────────────────────────────
   if (!isLoggedIn) {
     return (
-      <div
-        className="min-h-screen flex flex-col"
-        style={{ background: "linear-gradient(135deg, #0F3B66, #1a5a9a)" }}
-      >
-        <div className="flex flex-col items-center pt-16 pb-8">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-            style={{ background: "#F57C1F" }}
-          >
-            <TrendingUp size={32} className="text-white" />
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div
+          className="w-full max-w-sm rounded-2xl p-6 border border-white/8"
+          style={{ background: "oklch(0.17 0.016 260)" }}
+        >
+          <div className="flex flex-col items-center mb-6">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+              style={{
+                background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+              }}
+            >
+              <span className="text-white text-2xl">🔑</span>
+            </div>
+            <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              EarnHub Management
+            </p>
           </div>
-          <h1 className="text-white text-2xl font-bold">Admin Panel</h1>
-        </div>
-        <div className="flex-1 bg-white rounded-t-3xl px-6 py-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Admin Login</h2>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
               <label
-                htmlFor="admin-username"
-                className="text-sm font-medium text-gray-700"
+                htmlFor="admin-user"
+                className="text-sm font-medium text-foreground/80"
               >
                 Username
               </label>
               <input
-                id="admin-username"
+                id="admin-user"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="admin"
-                className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`mt-1.5 ${inputClass}`}
+                style={inputStyle}
                 data-ocid="admin.input"
               />
             </div>
             <div>
               <label
-                htmlFor="admin-password"
-                className="text-sm font-medium text-gray-700"
+                htmlFor="admin-pass"
+                className="text-sm font-medium text-foreground/80"
               >
                 Password
               </label>
               <input
-                id="admin-password"
+                id="admin-pass"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                placeholder="admin123"
-                className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`mt-1.5 ${inputClass}`}
+                style={inputStyle}
                 data-ocid="admin.input"
               />
             </div>
             {loginError && (
-              <p className="text-red-500 text-sm" data-ocid="admin.error_state">
+              <p
+                className="text-sm"
+                style={{ color: "#FF5555" }}
+                data-ocid="admin.error_state"
+              >
                 {loginError}
               </p>
             )}
             <button
               type="button"
               onClick={handleLogin}
-              className="w-full py-3.5 rounded-xl text-white font-semibold"
-              style={{ background: "#0F3B66" }}
+              className="w-full py-3 rounded-xl font-semibold text-sm"
+              style={{
+                background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+                color: "#0D1117",
+              }}
               data-ocid="admin.primary_button"
             >
               Login
@@ -310,306 +326,263 @@ export default function AdminPage() {
     );
   }
 
+  // ─── Dashboard ────────────────────────────────────────────────
+  const TABS: { key: Tab; label: string; count?: number }[] = [
+    {
+      key: "payments",
+      label: "Purchases",
+      count: payments.filter(
+        (p) => p.status === Variant_pending_approved_rejected.pending,
+      ).length,
+    },
+    {
+      key: "deposits",
+      label: "Deposits",
+      count: deposits.filter(
+        (d) => d.status === Variant_pending_approved_rejected.pending,
+      ).length,
+    },
+    {
+      key: "withdrawals",
+      label: "Withdrawals",
+      count: withdrawals.filter(
+        (w) => w.status === Variant_pending_completed_rejected.pending,
+      ).length,
+    },
+    { key: "plans", label: "Plans" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
+      {/* Header */}
       <header
-        className="sticky top-0 z-50 flex items-center justify-between px-4 h-14"
-        style={{ background: "#0F3B66" }}
+        className="flex items-center justify-between px-4 h-14 border-b border-white/8"
+        style={{
+          background: "oklch(0.17 0.016 260 / 0.98)",
+          backdropFilter: "blur(12px)",
+        }}
       >
         <div className="flex items-center gap-2">
-          <TrendingUp size={20} className="text-white" />
-          <span className="text-white font-bold">EarnHub Admin</span>
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #FF6B00, #FF9500)" }}
+          >
+            <span className="text-white text-sm">🔑</span>
+          </div>
+          <span className="font-bold text-foreground">Admin Panel</span>
         </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex items-center gap-1 text-white/80 text-sm"
-          data-ocid="admin.secondary_button"
-        >
-          <LogOut size={16} /> Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={fetchAll}
+            className="p-2 rounded-xl transition-colors"
+            style={{ background: "rgba(255,255,255,0.06)" }}
+            data-ocid="admin.secondary_button"
+          >
+            <RefreshCw
+              size={15}
+              className={`text-muted-foreground ${loading ? "animate-spin" : ""}`}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
+            style={{ background: "rgba(255,85,85,0.12)", color: "#FF5555" }}
+            data-ocid="admin.delete_button"
+          >
+            <LogOut size={13} /> Logout
+          </button>
+        </div>
       </header>
 
-      <div className="flex bg-white border-b border-gray-200 sticky top-14 z-40">
-        {(["payments", "withdrawals", "deposits", "plans"] as Tab[]).map(
-          (t) => (
-            <button
-              type="button"
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 py-3 text-xs font-semibold capitalize transition-colors ${
-                tab === t ? "border-b-2" : "text-gray-500"
-              }`}
-              style={
-                tab === t ? { borderColor: "#0F3B66", color: "#0F3B66" } : {}
-              }
-              data-ocid="admin.tab"
-            >
-              {t}
-            </button>
-          ),
-        )}
+      {/* Tabs */}
+      <div
+        className="flex gap-1 px-4 py-3 overflow-x-auto"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {TABS.map(({ key, label, count }) => (
+          <button
+            type="button"
+            key={key}
+            onClick={() => setTab(key)}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background:
+                tab === key
+                  ? "linear-gradient(135deg, #FF6B00, #FF9500)"
+                  : "rgba(255,255,255,0.06)",
+              color: tab === key ? "#0D1117" : "rgba(255,255,255,0.65)",
+            }}
+            data-ocid="admin.tab"
+          >
+            {label}
+            {count !== undefined && count > 0 && (
+              <span
+                className="px-1.5 py-0.5 rounded-full text-xs font-bold"
+                style={{
+                  background:
+                    tab === key ? "rgba(0,0,0,0.2)" : "rgba(255,107,0,0.2)",
+                  color: tab === key ? "#0D1117" : "#FF6B00",
+                }}
+              >
+                {count}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-5 pb-8">
+      <div className="px-4 pb-8">
         {loading && (
           <div
-            className="text-center text-gray-400 py-8"
+            className="text-center py-8 text-muted-foreground text-sm"
             data-ocid="admin.loading_state"
           >
             Loading...
           </div>
         )}
 
+        {/* Plan Purchases */}
         {!loading && tab === "payments" && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500">
-              {payments.length} submissions
-            </p>
             {payments.length === 0 && (
               <div
-                className="text-center py-8 text-gray-400 text-sm"
+                className="text-center py-8 text-muted-foreground text-sm"
                 data-ocid="admin.empty_state"
               >
-                No payment submissions
+                No plan purchases yet
               </div>
             )}
-            {[...payments].reverse().map((p, i) => {
-              // When displayed in reverse, original index = array.length - 1 - i
-              const originalIndex = payments.length - 1 - i;
-              return (
-                <div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: no stable key available
-                  key={i}
-                  className="bg-white rounded-2xl p-4 shadow-sm"
-                  data-ocid={`admin.item.${i + 1}`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-xs text-gray-500">User</p>
-                      <p className="text-sm font-mono font-semibold text-gray-800">
-                        {shortPrincipal(p.user)}
-                      </p>
-                    </div>
-                    <StatusBadgePAR status={p.status} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
-                    <div>
-                      <span className="text-gray-400">Plan ID:</span>{" "}
-                      {p.planId.toString()}
-                    </div>
-                    <div>
-                      <span className="text-gray-400">App:</span> {p.paymentApp}
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-gray-400">UTR:</span> {p.utrNumber}
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-gray-400">Date:</span>{" "}
-                      {new Date(
-                        Number(p.submittedAt / 1000000n),
-                      ).toLocaleString("en-IN")}
-                    </div>
-                  </div>
-                  {p.status === Variant_pending_approved_rejected.pending && (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          doAction(`pay-approve-${i}`, () =>
-                            actor!.approvePaymentSubmission(
-                              BigInt(originalIndex),
-                            ),
-                          )
-                        }
-                        disabled={!!actionLoading}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                        style={{ background: "#16A34A" }}
-                        data-ocid="admin.confirm_button"
-                      >
-                        <CheckCircle size={14} /> Approve
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          doAction(`pay-reject-${i}`, () =>
-                            actor!.rejectPaymentSubmission(
-                              BigInt(originalIndex),
-                            ),
-                          )
-                        }
-                        disabled={!!actionLoading}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                        style={{ background: "#DC2626" }}
-                        data-ocid="admin.delete_button"
-                      >
-                        <XCircle size={14} /> Reject
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {!loading && tab === "withdrawals" && (
-          <div className="space-y-3">
-            <p className="text-xs text-gray-500">
-              {
-                withdrawals.filter(
-                  (w) =>
-                    w.status === Variant_pending_completed_rejected.pending,
-                ).length
-              }{" "}
-              pending • {withdrawals.length} total
-            </p>
-            {withdrawals.length === 0 && (
+            {[...payments].reverse().map((pm, i) => (
               <div
-                className="text-center py-8 text-gray-400 text-sm"
-                data-ocid="admin.empty_state"
+                key={`${pm.utrNumber}-${pm.submittedAt.toString()}`}
+                className="rounded-2xl p-4 border border-white/8"
+                style={{ background: "oklch(0.17 0.016 260)" }}
+                data-ocid={`admin.item.${i + 1}`}
               >
-                No withdrawal requests
-              </div>
-            )}
-            {[...withdrawals].reverse().map((w, i) => {
-              const originalIndex = withdrawals.length - 1 - i;
-              return (
-                <div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: no stable key available
-                  key={i}
-                  className="bg-white rounded-2xl p-4 shadow-sm"
-                  data-ocid={`admin.item.${i + 1}`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-xs text-gray-500">User</p>
-                      <p className="text-sm font-mono font-semibold text-gray-800">
-                        {shortPrincipal(w.user)}
-                      </p>
-                    </div>
-                    <StatusBadgePCR status={w.status} />
-                  </div>
-                  {/* Amount & UPI highlighted prominently */}
-                  <div className="bg-orange-50 rounded-xl p-3 mb-3">
-                    <p className="text-lg font-extrabold text-gray-900">
-                      ₹{Number(w.amount).toLocaleString("en-IN")}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm font-semibold text-orange-700">
-                        {w.upiId}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => copyUpi(w.upiId)}
-                        className="p-1 rounded-md bg-orange-100 hover:bg-orange-200 transition-colors"
-                        title="Copy UPI ID"
-                        data-ocid="admin.secondary_button"
-                      >
-                        <Copy size={12} className="text-orange-600" />
-                      </button>
-                      {copiedUpi === w.upiId && (
-                        <span className="text-xs text-green-600 font-medium">
-                          Copied!
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Send ₹{Number(w.amount)} to this UPI ID
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">User</p>
+                    <p className="text-sm font-mono text-foreground">
+                      {shortPrincipal(pm.user)}
                     </p>
                   </div>
-                  <div className="text-xs text-gray-500 mb-3">
-                    {new Date(Number(w.requestedAt / 1000000n)).toLocaleString(
-                      "en-IN",
-                    )}
-                  </div>
-                  {w.status === Variant_pending_completed_rejected.pending && (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          doAction(`wd-approve-${i}`, () =>
-                            actor!.approveWithdrawalRequest(
-                              BigInt(originalIndex),
-                            ),
-                          )
-                        }
-                        disabled={!!actionLoading}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                        style={{ background: "#16A34A" }}
-                        data-ocid="admin.confirm_button"
-                      >
-                        <CheckCircle size={14} /> Approve
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          doAction(`wd-reject-${i}`, () =>
-                            actor!.rejectWithdrawalRequest(
-                              BigInt(originalIndex),
-                            ),
-                          )
-                        }
-                        disabled={!!actionLoading}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                        style={{ background: "#DC2626" }}
-                        data-ocid="admin.delete_button"
-                      >
-                        <XCircle size={14} /> Reject
-                      </button>
-                    </div>
-                  )}
+                  <StatusPAR status={pm.status} />
                 </div>
-              );
-            })}
+                <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                  <div>
+                    <p className="text-muted-foreground">Plan ID</p>
+                    <p className="text-foreground font-semibold">
+                      {pm.planId.toString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Payment App</p>
+                    <p className="text-foreground font-semibold">
+                      {pm.paymentApp}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">UTR Number</p>
+                    <p className="text-foreground font-semibold font-mono">
+                      {pm.utrNumber}
+                    </p>
+                  </div>
+                </div>
+                {pm.status === Variant_pending_approved_rejected.pending && (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        doAction(`pm-approve-${i}`, () =>
+                          actor!.approvePaymentSubmission(
+                            BigInt(payments.length - 1 - i),
+                          ),
+                        )
+                      }
+                      disabled={!!actionLoading}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
+                      style={{
+                        background: "rgba(0,201,167,0.2)",
+                        color: "#00C9A7",
+                        border: "1px solid rgba(0,201,167,0.3)",
+                      }}
+                      data-ocid="admin.confirm_button"
+                    >
+                      <CheckCircle size={13} /> Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        doAction(`pm-reject-${i}`, () =>
+                          actor!.rejectPaymentSubmission(
+                            BigInt(payments.length - 1 - i),
+                          ),
+                        )
+                      }
+                      disabled={!!actionLoading}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
+                      style={{
+                        background: "rgba(255,85,85,0.15)",
+                        color: "#FF5555",
+                        border: "1px solid rgba(255,85,85,0.25)",
+                      }}
+                      data-ocid="admin.delete_button"
+                    >
+                      <XCircle size={13} /> Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
+        {/* Deposits */}
         {!loading && tab === "deposits" && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500">{deposits.length} requests</p>
             {deposits.length === 0 && (
               <div
-                className="text-center py-8 text-gray-400 text-sm"
+                className="text-center py-8 text-muted-foreground text-sm"
                 data-ocid="admin.empty_state"
               >
-                No deposit requests
+                No deposit requests yet
               </div>
             )}
-            {[...deposits].reverse().map((d, i) => {
+            {[...deposits].reverse().map((dep, i) => {
               const originalIndex = deposits.length - 1 - i;
               return (
                 <div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: no stable key available
-                  key={i}
-                  className="bg-white rounded-2xl p-4 shadow-sm"
+                  key={`${dep.utrNumber}-${dep.submittedAt.toString()}`}
+                  className="rounded-2xl p-4 border border-white/8"
+                  style={{ background: "oklch(0.17 0.016 260)" }}
                   data-ocid={`admin.item.${i + 1}`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-xs text-gray-500">User</p>
-                      <p className="text-sm font-mono font-semibold text-gray-800">
-                        {shortPrincipal(d.user)}
+                      <p className="text-xs text-muted-foreground">User</p>
+                      <p className="text-sm font-mono text-foreground">
+                        {shortPrincipal(dep.user)}
                       </p>
                     </div>
-                    <StatusBadgePAR status={d.status} />
+                    <StatusPAR status={dep.status} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
+                  <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                     <div>
-                      <span className="text-gray-400">Amount:</span> ₹
-                      {Number(d.amount)}
+                      <p className="text-muted-foreground">Amount</p>
+                      <p className="text-foreground font-bold text-base">
+                        ₹{Number(dep.amount).toLocaleString("en-IN")}
+                      </p>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-gray-400">UTR:</span> {d.utrNumber}
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-gray-400">Date:</span>{" "}
-                      {new Date(
-                        Number(d.submittedAt / 1000000n),
-                      ).toLocaleString("en-IN")}
+                      <p className="text-muted-foreground">UTR Number</p>
+                      <p className="text-foreground font-semibold font-mono">
+                        {dep.utrNumber}
+                      </p>
                     </div>
                   </div>
-                  {d.status === Variant_pending_approved_rejected.pending && (
+                  {dep.status === Variant_pending_approved_rejected.pending && (
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -619,11 +592,15 @@ export default function AdminPage() {
                           )
                         }
                         disabled={!!actionLoading}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                        style={{ background: "#16A34A" }}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
+                        style={{
+                          background: "rgba(0,201,167,0.2)",
+                          color: "#00C9A7",
+                          border: "1px solid rgba(0,201,167,0.3)",
+                        }}
                         data-ocid="admin.confirm_button"
                       >
-                        <CheckCircle size={14} /> Approve
+                        <CheckCircle size={13} /> Approve
                       </button>
                       <button
                         type="button"
@@ -633,11 +610,15 @@ export default function AdminPage() {
                           )
                         }
                         disabled={!!actionLoading}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                        style={{ background: "#DC2626" }}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
+                        style={{
+                          background: "rgba(255,85,85,0.15)",
+                          color: "#FF5555",
+                          border: "1px solid rgba(255,85,85,0.25)",
+                        }}
                         data-ocid="admin.delete_button"
                       >
-                        <XCircle size={14} /> Reject
+                        <XCircle size={13} /> Reject
                       </button>
                     </div>
                   )}
@@ -647,42 +628,179 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Withdrawals */}
+        {!loading && tab === "withdrawals" && (
+          <div className="space-y-3">
+            {withdrawals.length === 0 && (
+              <div
+                className="text-center py-8 text-muted-foreground text-sm"
+                data-ocid="admin.empty_state"
+              >
+                No withdrawal requests yet
+              </div>
+            )}
+            {[...withdrawals].reverse().map((wr, i) => {
+              const originalIndex = withdrawals.length - 1 - i;
+              return (
+                <div
+                  key={`${wr.upiId}-${wr.requestedAt.toString()}`}
+                  className="rounded-2xl p-4 border border-white/8"
+                  style={{ background: "oklch(0.17 0.016 260)" }}
+                  data-ocid={`admin.item.${i + 1}`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">User</p>
+                      <p className="text-sm font-mono text-foreground">
+                        {shortPrincipal(wr.user)}
+                      </p>
+                    </div>
+                    <StatusPCR status={wr.status} />
+                  </div>
+                  <div className="mb-3">
+                    <p className="text-xs text-muted-foreground mb-1">Amount</p>
+                    <p className="text-foreground font-bold text-xl">
+                      ₹{Number(wr.amount).toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                  {/* UPI ID — prominent orange box with copy */}
+                  <div
+                    className="flex items-center justify-between rounded-xl px-3 py-2.5 mb-3"
+                    style={{
+                      background: "rgba(255,107,0,0.12)",
+                      border: "2px solid rgba(255,107,0,0.35)",
+                    }}
+                    data-ocid="admin.panel"
+                  >
+                    <div>
+                      <p
+                        className="text-xs"
+                        style={{ color: "rgba(255,107,0,0.7)" }}
+                      >
+                        UPI ID
+                      </p>
+                      <p
+                        className="text-sm font-bold"
+                        style={{ color: "#FF6B00" }}
+                      >
+                        {wr.upiId}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyUpi(wr.upiId)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95"
+                      style={{
+                        background:
+                          copiedUpi === wr.upiId
+                            ? "rgba(0,201,167,0.2)"
+                            : "rgba(255,107,0,0.2)",
+                        color: copiedUpi === wr.upiId ? "#00C9A7" : "#FF6B00",
+                        border: `1px solid ${copiedUpi === wr.upiId ? "rgba(0,201,167,0.4)" : "rgba(255,107,0,0.4)"}`,
+                      }}
+                      data-ocid="admin.secondary_button"
+                    >
+                      <Copy size={11} />
+                      {copiedUpi === wr.upiId ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                  {wr.status === Variant_pending_completed_rejected.pending && (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          doAction(`wr-approve-${i}`, () =>
+                            actor!.approveWithdrawalRequest(
+                              BigInt(originalIndex),
+                            ),
+                          )
+                        }
+                        disabled={!!actionLoading}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
+                        style={{
+                          background: "rgba(0,201,167,0.2)",
+                          color: "#00C9A7",
+                          border: "1px solid rgba(0,201,167,0.3)",
+                        }}
+                        data-ocid="admin.confirm_button"
+                      >
+                        <CheckCircle size={13} /> Approve
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          doAction(`wr-reject-${i}`, () =>
+                            actor!.rejectWithdrawalRequest(
+                              BigInt(originalIndex),
+                            ),
+                          )
+                        }
+                        disabled={!!actionLoading}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
+                        style={{
+                          background: "rgba(255,85,85,0.15)",
+                          color: "#FF5555",
+                          border: "1px solid rgba(255,85,85,0.25)",
+                        }}
+                        data-ocid="admin.delete_button"
+                      >
+                        <XCircle size={13} /> Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Plans */}
         {!loading && tab === "plans" && (
           <div className="space-y-4">
             {saveMsg && (
               <div
-                className="bg-green-50 border border-green-200 rounded-xl p-3 text-green-700 text-sm"
+                className="rounded-xl p-3 text-sm font-medium"
                 data-ocid="admin.success_state"
+                style={{
+                  background: "rgba(0,201,167,0.12)",
+                  color: "#00C9A7",
+                  border: "1px solid rgba(0,201,167,0.25)",
+                }}
               >
                 {saveMsg}
               </div>
             )}
 
-            {/* Add Plan Button */}
             <button
               type="button"
               onClick={() => setShowAddPlan(!showAddPlan)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold text-sm"
-              style={{ background: "#F57C1F" }}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all"
+              style={{
+                background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+                color: "#0D1117",
+              }}
               data-ocid="admin.primary_button"
             >
-              <Plus size={16} /> Add New Plan
+              <Plus size={15} /> Add New Plan
             </button>
 
-            {/* Add Plan Form */}
             {showAddPlan && (
               <div
-                className="bg-white rounded-2xl p-4 shadow-sm border-2 border-orange-200"
+                className="rounded-2xl p-4 border"
+                style={{
+                  background: "oklch(0.17 0.016 260)",
+                  borderColor: "rgba(255,107,0,0.3)",
+                }}
                 data-ocid="admin.panel"
               >
-                <h3 className="text-sm font-bold text-gray-900 mb-3">
+                <h3 className="text-sm font-bold text-foreground mb-3">
                   New Plan
                 </h3>
                 <div className="space-y-3">
                   <div>
                     <label
                       htmlFor="new-plan-name"
-                      className="text-xs font-medium text-gray-500"
+                      className="text-xs font-medium text-muted-foreground"
                     >
                       Plan Name
                     </label>
@@ -694,7 +812,8 @@ export default function AdminPage() {
                         setNewPlan((p) => ({ ...p, name: e.target.value }))
                       }
                       placeholder="e.g. Silver Plan"
-                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      className={`mt-1 ${inputClass}`}
+                      style={inputStyle}
                       data-ocid="admin.input"
                     />
                   </div>
@@ -702,7 +821,7 @@ export default function AdminPage() {
                     <div>
                       <label
                         htmlFor="new-plan-price"
-                        className="text-xs font-medium text-gray-500"
+                        className="text-xs font-medium text-muted-foreground"
                       >
                         Price (₹)
                       </label>
@@ -714,13 +833,14 @@ export default function AdminPage() {
                           setNewPlan((p) => ({ ...p, price: e.target.value }))
                         }
                         placeholder="500"
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        className={`mt-1 ${inputClass}`}
+                        style={inputStyle}
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="new-plan-daily"
-                        className="text-xs font-medium text-gray-500"
+                        className="text-xs font-medium text-muted-foreground"
                       >
                         Daily ₹
                       </label>
@@ -735,13 +855,14 @@ export default function AdminPage() {
                           }))
                         }
                         placeholder="25"
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        className={`mt-1 ${inputClass}`}
+                        style={inputStyle}
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="new-plan-days"
-                        className="text-xs font-medium text-gray-500"
+                        className="text-xs font-medium text-muted-foreground"
                       >
                         Days
                       </label>
@@ -756,7 +877,8 @@ export default function AdminPage() {
                           }))
                         }
                         placeholder="30"
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        className={`mt-1 ${inputClass}`}
+                        style={inputStyle}
                       />
                     </div>
                   </div>
@@ -764,8 +886,11 @@ export default function AdminPage() {
                     type="button"
                     onClick={addNewPlan}
                     disabled={addingPlan}
-                    className="w-full py-2.5 rounded-xl text-white font-semibold text-sm disabled:opacity-60"
-                    style={{ background: "#0F3B66" }}
+                    className="w-full py-2.5 rounded-xl font-semibold text-sm disabled:opacity-50"
+                    style={{
+                      background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+                      color: "#0D1117",
+                    }}
                     data-ocid="admin.submit_button"
                   >
                     {addingPlan ? "Adding..." : "Add Plan"}
@@ -776,10 +901,10 @@ export default function AdminPage() {
 
             {plans.length === 0 && !showAddPlan && (
               <div
-                className="text-center py-8 text-gray-400 text-sm"
+                className="text-center py-8 text-muted-foreground text-sm"
                 data-ocid="admin.empty_state"
               >
-                No plans yet. Click "Add New Plan" to create plans.
+                No plans yet. Click "Add New Plan" to create one.
               </div>
             )}
 
@@ -789,17 +914,18 @@ export default function AdminPage() {
               return (
                 <div
                   key={key}
-                  className="bg-white rounded-2xl p-4 shadow-sm"
+                  className="rounded-2xl p-4 border border-white/8"
+                  style={{ background: "oklch(0.17 0.016 260)" }}
                   data-ocid="admin.card"
                 >
-                  <h3 className="text-sm font-bold text-gray-900 mb-3">
-                    Plan #{plan.id.toString()}
+                  <h3 className="text-sm font-bold text-foreground mb-3">
+                    Plan #{key}
                   </h3>
                   <div className="space-y-3">
                     <div>
                       <label
                         htmlFor={`plan-name-${key}`}
-                        className="text-xs font-medium text-gray-500"
+                        className="text-xs font-medium text-muted-foreground"
                       >
                         Plan Name
                       </label>
@@ -813,14 +939,15 @@ export default function AdminPage() {
                             [key]: { ...edit, name: e.target.value },
                           }))
                         }
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        className={`mt-1 ${inputClass}`}
+                        style={inputStyle}
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label
                           htmlFor={`plan-price-${key}`}
-                          className="text-xs font-medium text-gray-500"
+                          className="text-xs font-medium text-muted-foreground"
                         >
                           Price (₹)
                         </label>
@@ -833,17 +960,20 @@ export default function AdminPage() {
                               ...prev,
                               [key]: {
                                 ...edit,
-                                price: BigInt(e.target.value || 0),
+                                price: BigInt(
+                                  Number.parseInt(e.target.value) || 0,
+                                ),
                               },
                             }))
                           }
-                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          className={`mt-1 ${inputClass}`}
+                          style={inputStyle}
                         />
                       </div>
                       <div>
                         <label
                           htmlFor={`plan-daily-${key}`}
-                          className="text-xs font-medium text-gray-500"
+                          className="text-xs font-medium text-muted-foreground"
                         >
                           Daily ₹
                         </label>
@@ -856,17 +986,20 @@ export default function AdminPage() {
                               ...prev,
                               [key]: {
                                 ...edit,
-                                dailyEarning: BigInt(e.target.value || 0),
+                                dailyEarning: BigInt(
+                                  Number.parseInt(e.target.value) || 0,
+                                ),
                               },
                             }))
                           }
-                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          className={`mt-1 ${inputClass}`}
+                          style={inputStyle}
                         />
                       </div>
                       <div>
                         <label
                           htmlFor={`plan-days-${key}`}
-                          className="text-xs font-medium text-gray-500"
+                          className="text-xs font-medium text-muted-foreground"
                         >
                           Days
                         </label>
@@ -879,23 +1012,30 @@ export default function AdminPage() {
                               ...prev,
                               [key]: {
                                 ...edit,
-                                validityDays: BigInt(e.target.value || 0),
+                                validityDays: BigInt(
+                                  Number.parseInt(e.target.value) || 0,
+                                ),
                               },
                             }))
                           }
-                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          className={`mt-1 ${inputClass}`}
+                          style={inputStyle}
                         />
                       </div>
                     </div>
                     <button
                       type="button"
-                      onClick={() => savePlan(plan.id)}
-                      disabled={actionLoading === `save-${plan.id}`}
-                      className="w-full py-2.5 rounded-xl text-white font-semibold text-sm disabled:opacity-60"
-                      style={{ background: "#0F3B66" }}
+                      onClick={() => savePlan(edit)}
+                      disabled={actionLoading === `save-${key}`}
+                      className="w-full py-2.5 rounded-xl font-semibold text-sm disabled:opacity-50"
+                      style={{
+                        background: "rgba(0,201,167,0.2)",
+                        color: "#00C9A7",
+                        border: "1px solid rgba(0,201,167,0.3)",
+                      }}
                       data-ocid="admin.save_button"
                     >
-                      {actionLoading === `save-${plan.id}`
+                      {actionLoading === `save-${key}`
                         ? "Saving..."
                         : "Save Changes"}
                     </button>
@@ -906,19 +1046,6 @@ export default function AdminPage() {
           </div>
         )}
       </div>
-
-      {/* Footer */}
-      <footer className="mt-6 pb-6 text-center text-xs text-gray-400">
-        © {new Date().getFullYear()}. Built with love using{" "}
-        <a
-          href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline hover:text-gray-600"
-        >
-          caffeine.ai
-        </a>
-      </footer>
     </div>
   );
 }

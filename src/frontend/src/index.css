@@ -16,82 +16,56 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "PlusJakartaSans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    /* EarnHub brand colors — primary navy, accent orange, secondary teal */
-    /* Navy #0F3B66 → oklch(0.34 0.1 240) */
-    /* Orange #F57C1F → oklch(0.70 0.19 45) */
-    /* Teal #18A6A0 → oklch(0.64 0.10 187) */
+    /* EarnHub Dark Theme — deep charcoal bg, vibrant orange accent, electric teal secondary */
+    /* Background: #0D1117 slate-black → oklch(0.13 0.01 260) */
+    /* Card: #161B22 → oklch(0.17 0.015 260) */
+    /* Orange: #FF6B00 → oklch(0.68 0.22 43) */
+    /* Teal: #00C9A7 → oklch(0.74 0.13 175) */
+    /* Navy: #1E3A5F → oklch(0.30 0.08 250) */
 
-    --background: 0.97 0 0;
-    --foreground: 0.2 0.04 250;
-    --card: 1 0 0;
-    --card-foreground: 0.2 0.04 250;
-    --popover: 1 0 0;
-    --popover-foreground: 0.2 0.04 250;
-    --primary: 0.34 0.1 240;
-    --primary-foreground: 0.98 0 0;
-    --secondary: 0.64 0.1 187;
-    --secondary-foreground: 0.98 0 0;
-    --muted: 0.94 0.01 240;
-    --muted-foreground: 0.5 0.03 240;
-    --accent: 0.7 0.19 45;
-    --accent-foreground: 0.98 0 0;
-    --destructive: 0.55 0.22 25;
-    --destructive-foreground: 0.98 0 0;
-    --border: 0.9 0.01 240;
-    --input: 0.9 0.01 240;
-    --ring: 0.34 0.1 240;
-    --chart-1: 0.7 0.19 45;
-    --chart-2: 0.64 0.1 187;
-    --chart-3: 0.34 0.1 240;
-    --chart-4: 0.55 0.22 25;
-    --chart-5: 0.82 0.12 84;
-    --sidebar: 0.34 0.1 240;
-    --sidebar-foreground: 0.98 0 0;
-    --sidebar-primary: 0.7 0.19 45;
-    --sidebar-primary-foreground: 0.98 0 0;
-    --sidebar-accent: 0.64 0.1 187;
-    --sidebar-accent-foreground: 0.98 0 0;
-    --sidebar-border: 0.45 0.08 240;
-    --sidebar-ring: 0.7 0.19 45;
-  }
-
-  .dark {
-    --background: 0.18 0.04 245;
-    --foreground: 0.95 0 0;
-    --card: 0.24 0.05 245;
-    --card-foreground: 0.95 0 0;
-    --popover: 0.28 0.05 245;
-    --popover-foreground: 0.95 0 0;
-    --primary: 0.7 0.19 45;
+    --background: 0.13 0.012 262;
+    --foreground: 0.96 0.005 260;
+    --card: 0.17 0.016 260;
+    --card-foreground: 0.94 0.005 260;
+    --popover: 0.2 0.018 260;
+    --popover-foreground: 0.94 0.005 260;
+    --primary: 0.68 0.22 43;
     --primary-foreground: 0.1 0 0;
-    --secondary: 0.64 0.1 187;
-    --secondary-foreground: 0.98 0 0;
-    --muted: 0.3 0.04 245;
-    --muted-foreground: 0.65 0.02 240;
-    --accent: 0.7 0.19 45;
+    --secondary: 0.74 0.13 175;
+    --secondary-foreground: 0.08 0 0;
+    --muted: 0.22 0.015 260;
+    --muted-foreground: 0.6 0.01 260;
+    --accent: 0.68 0.22 43;
     --accent-foreground: 0.1 0 0;
     --destructive: 0.6 0.22 25;
     --destructive-foreground: 0.98 0 0;
     --border: 1 0 0 / 10%;
-    --input: 1 0 0 / 15%;
-    --ring: 0.7 0.19 45;
-    --chart-1: 0.7 0.19 45;
-    --chart-2: 0.64 0.1 187;
-    --chart-3: 0.48 0.1 240;
+    --input: 1 0 0 / 10%;
+    --ring: 0.68 0.22 43;
+    --chart-1: 0.68 0.22 43;
+    --chart-2: 0.74 0.13 175;
+    --chart-3: 0.48 0.12 250;
     --chart-4: 0.6 0.22 25;
     --chart-5: 0.82 0.12 84;
-    --sidebar: 0.22 0.06 245;
-    --sidebar-foreground: 0.95 0 0;
-    --sidebar-primary: 0.7 0.19 45;
+    --sidebar: 0.17 0.016 260;
+    --sidebar-foreground: 0.94 0.005 260;
+    --sidebar-primary: 0.68 0.22 43;
     --sidebar-primary-foreground: 0.1 0 0;
-    --sidebar-accent: 0.64 0.1 187;
-    --sidebar-accent-foreground: 0.98 0 0;
+    --sidebar-accent: 0.74 0.13 175;
+    --sidebar-accent-foreground: 0.08 0 0;
     --sidebar-border: 1 0 0 / 10%;
-    --sidebar-ring: 0.7 0.19 45;
+    --sidebar-ring: 0.68 0.22 43;
   }
 
   * {
@@ -99,6 +73,24 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Figtree", "BricolageGrotesque", system-ui, sans-serif;
+    font-family: "PlusJakartaSans", "Figtree", system-ui, sans-serif;
   }
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+/* Mobile safe area */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

@@ -16,8 +16,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Figtree", "BricolageGrotesque", "system-ui", "sans-serif"],
-        display: ["BricolageGrotesque", "Figtree", "system-ui", "sans-serif"],
+        sans: ["PlusJakartaSans", "Figtree", "system-ui", "sans-serif"],
+        display: ["BricolageGrotesque", "PlusJakartaSans", "system-ui", "sans-serif"],
       },
       colors: {
         border: "oklch(var(--border))",
@@ -77,8 +77,10 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        card: "0 2px 12px 0 rgba(15,59,102,0.08)",
+        xs: "0 1px 2px 0 rgba(0,0,0,0.3)",
+        card: "0 2px 16px 0 rgba(0,0,0,0.4)",
+        glow: "0 0 20px rgba(255,107,0,0.25)",
+        "glow-teal": "0 0 20px rgba(0,201,167,0.2)",
       },
       keyframes: {
         "accordion-down": {
@@ -89,10 +91,15 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
       },
     },
   },
