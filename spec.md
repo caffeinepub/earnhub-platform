@@ -1,49 +1,47 @@
 # EarnHub Platform
 
 ## Current State
-EarnHub is a mobile-first subscription earning platform with Motoko backend and React/TypeScript frontend. Previous version (v20) had all features implemented but the draft expired.
+Full rebuild from scratch. Previous version expired. All features need to be re-implemented based on project history.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Nothing new — full rebuild of existing feature set
+- Full EarnHub platform rebuild with all features from previous versions
 
 ### Modify
-- Rebuild the complete app with all existing features intact
+- N/A (fresh rebuild)
 
 ### Remove
-- Nothing
+- N/A
 
 ## Implementation Plan
 
 ### Backend (Motoko)
-- User authentication (mobile number + OTP simulation)
-- Subscription plan management (Basic ₹500/₹150 daily 60 days, Standard ₹1000/₹300 daily 60 days, Premium ₹1750/₹750 daily 120 days)
-- Wallet: balance tracking per user, defaults to ₹0
-- Deposit management: store deposit requests with UTR/transaction ID, admin approval flow
-- Withdrawal management: store withdrawal requests with UPI ID, admin approval
-- Referral system: track referrer/referee relationships, auto-credit ₹500 bonus when referred user's Basic Plan (₹500) deposit is approved
-- Admin panel backend: list users, approve/reject deposits and withdrawals, manage plans
-- Notification data: static offer notifications per user
+- User registration and authentication (mobile number + OTP simulation)
+- Subscription plans management (Basic ₹500/₹150/day/60days, Standard ₹1000/₹300/day/60days, Premium ₹1750/₹750/day/120days)
+- Auto-seed plans on first load
+- Deposit/transaction management with UTR/Transaction ID
+- Wallet balance tracking (default ₹0, updates after deposit approval)
+- Withdrawal request management with UPI ID
+- Admin panel with credentials admin/admin123
+- Referral system: unique referral links, ₹500 bonus when referred user buys Basic Plan and admin approves
+- Daily earnings calculation and crediting
 
-### Frontend (React + TypeScript)
-- **Mobile-first UI** with bottom navigation bar
-- **Auth page**: mobile number input + OTP verification (simulated)
-- **Home page**: welcome header with notification bell (clickable, shows 3 offer messages with New badge + Mark All Read), Available Plans section (Basic, Standard, Premium cards with Buy Now button), no loading skeletons — plans show instantly with fallback data
-- **Payment modal**: triggered by Buy Now — shows static UPI QR code image only (no camera scanner), payment app logos (PhonePe, Google Pay, Paytm), UTR/Transaction ID manual entry field
-- **Deposit page**: static UPI QR code display, UTR manual entry, deposit history
-- **Wallet page**: balance (defaults ₹0, updates after deposit), earnings tracker, active plans
-- **Withdraw page**: withdrawal request form (UPI ID input, amount), withdrawal history (shows spinner only during actual fetch, shows user's own withdrawals only, shows 'No withdrawals yet' if empty)
-- **Referral page** (gift icon in bottom nav): unique referral link copy button, referral earnings display, how-it-works explanation (₹500 bonus when referred user buys Basic Plan)
-- **Profile page**: user info
-- **Admin page** at `/admin` (credentials: admin/admin123): tabs for Users, Plans, Deposits, Withdrawals; withdrawal requests show user UPI ID in bold orange box with Copy button
-- Bottom navigation: Home, Wallet, Deposit, Referral, Profile tabs
-- All UI fully in English
-- Payment logos: real PhonePe, Google Pay, Paytm generated logo images
-
-### Assets
-- UPI QR code: `src/frontend/public/assets/upi-qr.jpg` (existing)
-- Payment logos: already generated in `src/frontend/public/assets/generated/`
-  - `googlepay-logo-transparent.dim_100x100.png`
-  - `paytm-logo-transparent.dim_100x100.png`
-  - `phonepe-logo-transparent.dim_100x100.png`
+### Frontend
+- Mobile-first PWA design
+- Login page: mobile number input + OTP
+- Home page: wallet balance, available plans, quick actions
+- Plans display: always show instantly (no loading skeletons), fallback hardcoded plans
+- Deposit page: static UPI QR code image display, UTR/Transaction ID manual entry, payment app logos (PhonePe, Google Pay, Paytm)
+- Buy Now modal: static QR code only (no camera scanner)
+- Wallet page: balance, earnings history
+- Withdrawal page: UPI ID input, withdrawal history (user-specific only)
+- Referral tab (gift icon in bottom nav): copy referral link, earnings display
+- Notification bell (top left): clickable, shows offer messages with New badge, Mark all read
+- Admin panel at /admin (admin/admin123):
+  - Users management
+  - Plans management (add/edit/delete)
+  - Deposits/transactions approval (shows UTR)
+  - Withdrawals approval (shows UPI ID in bold orange box with Copy button)
+- Bottom navigation: Home, Wallet, Deposit, Referral tabs
+- All UI text in English only (no Hindi/Hinglish)
