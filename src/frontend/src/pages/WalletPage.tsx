@@ -14,18 +14,18 @@ function statusBadge(status: Variant_pending_completed_rejected) {
   const map = {
     [Variant_pending_completed_rejected.completed]: {
       label: "Completed",
-      color: "#00C9A7",
-      bg: "rgba(0,201,167,0.15)",
+      color: "#10b981",
+      bg: "rgba(16,185,129,0.1)",
     },
     [Variant_pending_completed_rejected.rejected]: {
       label: "Rejected",
-      color: "#FF5555",
-      bg: "rgba(255,85,85,0.15)",
+      color: "#ef4444",
+      bg: "rgba(239,68,68,0.1)",
     },
     [Variant_pending_completed_rejected.pending]: {
       label: "Pending",
-      color: "#FF9500",
-      bg: "rgba(255,149,0,0.15)",
+      color: "#f97316",
+      bg: "rgba(249,115,22,0.1)",
     },
   };
   const s = map[status] ?? map[Variant_pending_completed_rejected.pending];
@@ -101,19 +101,20 @@ export default function WalletPage() {
 
   return (
     <div className="px-4 py-5 pb-8">
-      <h1 className="text-2xl font-bold text-foreground mb-5">Wallet</h1>
+      <h1 className="text-2xl font-bold mb-5" style={{ color: "#0f172a" }}>
+        Wallet
+      </h1>
 
       {/* Balance Card */}
       <div
         className="rounded-2xl p-5 mb-5 relative overflow-hidden"
         style={{
-          background:
-            "linear-gradient(135deg, oklch(0.28 0.10 250), oklch(0.20 0.06 260))",
+          background: "linear-gradient(135deg, #1e40af, #3b82f6)",
         }}
       >
         <div
           className="absolute -right-4 -top-4 w-20 h-20 rounded-full"
-          style={{ background: "rgba(255,107,0,0.1)" }}
+          style={{ background: "rgba(255,255,255,0.1)" }}
         />
         <div className="flex items-center gap-2 mb-2">
           <Wallet size={14} className="text-white/75" />
@@ -136,12 +137,12 @@ export default function WalletPage() {
       {/* Earnings Breakdown */}
       {activePlan && (
         <div
-          className="rounded-2xl p-4 mb-5 border border-white/8"
-          style={{ background: "oklch(0.17 0.016 260)" }}
+          className="rounded-2xl p-4 mb-5"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp size={15} style={{ color: "#00C9A7" }} />
-            <h3 className="text-sm font-bold text-foreground">
+            <TrendingUp size={15} style={{ color: "#10b981" }} />
+            <h3 className="text-sm font-bold" style={{ color: "#0f172a" }}>
               Earnings Breakdown
             </h3>
           </div>
@@ -155,18 +156,20 @@ export default function WalletPage() {
               { label: "Days Active", value: daysActive.toString() },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm">
-                <span style={{ color: "#e5e7eb" }}>{label}</span>
-                <span className="font-semibold text-foreground">{value}</span>
+                <span style={{ color: "#475569" }}>{label}</span>
+                <span className="font-semibold" style={{ color: "#0f172a" }}>
+                  {value}
+                </span>
               </div>
             ))}
             <div
               className="flex justify-between text-sm pt-2"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ borderTop: "1px solid #e2e8f0" }}
             >
-              <span className="text-foreground font-medium">
+              <span className="font-medium" style={{ color: "#0f172a" }}>
                 Estimated Earnings
               </span>
-              <span className="font-bold" style={{ color: "#00C9A7" }}>
+              <span className="font-bold" style={{ color: "#10b981" }}>
                 ₹{estimatedEarnings.toLocaleString("en-IN")}
               </span>
             </div>
@@ -180,8 +183,10 @@ export default function WalletPage() {
         onClick={() => navigate("/withdraw")}
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm mb-5 transition-all active:scale-98"
         style={{
-          background: "linear-gradient(135deg, #FF6B00, #FF9500)",
-          color: "#0D1117",
+          background: "linear-gradient(135deg, #f97316, #fb923c)",
+          color: "#ffffff",
+          touchAction: "manipulation",
+          cursor: "pointer",
         }}
         data-ocid="wallet.primary_button"
       >
@@ -190,13 +195,13 @@ export default function WalletPage() {
       </button>
 
       {/* Withdrawal History */}
-      <h3 className="text-sm font-bold text-foreground mb-3">
+      <h3 className="text-sm font-bold mb-3" style={{ color: "#0f172a" }}>
         Withdrawal History
       </h3>
       {loading ? (
         <div
           className="text-sm"
-          style={{ color: "#e5e7eb" }}
+          style={{ color: "#475569" }}
           data-ocid="wallet.loading_state"
         >
           Loading...
@@ -204,7 +209,7 @@ export default function WalletPage() {
       ) : withdrawals.length === 0 ? (
         <div
           className="text-center py-8 text-sm"
-          style={{ color: "#e5e7eb" }}
+          style={{ color: "#94a3b8" }}
           data-ocid="wallet.empty_state"
         >
           <div className="text-3xl mb-2">💸</div>
@@ -218,15 +223,18 @@ export default function WalletPage() {
             .map((w, idx) => (
               <div
                 key={`${w.upiId}-${w.requestedAt.toString()}`}
-                className="rounded-xl p-3.5 flex items-center justify-between border border-white/6"
-                style={{ background: "oklch(0.17 0.016 260)" }}
+                className="rounded-xl p-3.5 flex items-center justify-between"
+                style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
                 data-ocid={`wallet.item.${idx + 1}`}
               >
                 <div>
-                  <p className="text-sm font-semibold text-foreground">
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "#0f172a" }}
+                  >
                     ₹{Number(w.amount).toLocaleString("en-IN")}
                   </p>
-                  <p className="text-xs" style={{ color: "#e5e7eb" }}>
+                  <p className="text-xs" style={{ color: "#475569" }}>
                     {w.upiId}
                   </p>
                 </div>
@@ -238,14 +246,14 @@ export default function WalletPage() {
 
       <footer
         className="mt-10 text-center text-xs"
-        style={{ color: "rgba(255,255,255,0.45)" }}
+        style={{ color: "#94a3b8" }}
       >
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-white/70 transition-colors"
+          className="underline hover:text-gray-500 transition-colors"
         >
           caffeine.ai
         </a>

@@ -68,89 +68,105 @@ export default function ProfilePage() {
 
   return (
     <div className="px-4 py-5 pb-8">
-      <h1 className="text-2xl font-bold text-foreground mb-5">Profile</h1>
+      <h1 className="text-2xl font-bold mb-5" style={{ color: "#0f172a" }}>
+        Profile
+      </h1>
 
       {/* Avatar + Name */}
       <div className="flex flex-col items-center mb-6">
         <div
           className="w-20 h-20 rounded-full flex items-center justify-center mb-3 relative"
           style={{
-            background:
-              "linear-gradient(135deg, oklch(0.28 0.10 250), oklch(0.35 0.14 43))",
+            background: "linear-gradient(135deg, #1e40af, #f97316)",
           }}
         >
           <User size={34} className="text-white" />
           <div
             className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
-            style={{ background: "#FF6B00" }}
+            style={{ background: "#f97316" }}
           >
             <Shield size={12} className="text-white" />
           </div>
         </div>
-        <p className="text-lg font-bold text-foreground">{mobile}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">EarnHub Member</p>
+        <p className="text-lg font-bold" style={{ color: "#0f172a" }}>
+          {mobile}
+        </p>
+        <p className="text-xs mt-0.5" style={{ color: "#94a3b8" }}>
+          EarnHub Member
+        </p>
       </div>
 
       {/* Info Cards */}
       <div className="space-y-3 mb-6">
         <div
-          className="rounded-2xl p-4 border border-white/8 flex items-center gap-3"
-          style={{ background: "oklch(0.17 0.016 260)" }}
+          className="rounded-2xl p-4 flex items-center gap-3"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
         >
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(79,142,247,0.15)" }}
+            style={{ background: "rgba(59,130,246,0.1)" }}
           >
-            <Phone size={16} style={{ color: "#4F8EF7" }} />
+            <Phone size={16} style={{ color: "#3b82f6" }} />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Mobile Number</p>
-            <p className="text-sm font-semibold text-foreground">{mobile}</p>
+            <p className="text-xs" style={{ color: "#94a3b8" }}>
+              Mobile Number
+            </p>
+            <p className="text-sm font-semibold" style={{ color: "#0f172a" }}>
+              {mobile}
+            </p>
           </div>
         </div>
 
         <div
-          className="rounded-2xl p-4 border border-white/8 flex items-center gap-3"
-          style={{ background: "oklch(0.17 0.016 260)" }}
+          className="rounded-2xl p-4 flex items-center gap-3"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
         >
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(0,201,167,0.15)" }}
+            style={{ background: "rgba(16,185,129,0.1)" }}
           >
-            <Calendar size={16} style={{ color: "#00C9A7" }} />
+            <Calendar size={16} style={{ color: "#10b981" }} />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Member Since</p>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-xs" style={{ color: "#94a3b8" }}>
+              Member Since
+            </p>
+            <p className="text-sm font-semibold" style={{ color: "#0f172a" }}>
               {loading ? "—" : joinDate}
             </p>
           </div>
         </div>
 
         <div
-          className="rounded-2xl p-4 border border-white/8 flex items-center gap-3"
-          style={{ background: "oklch(0.17 0.016 260)" }}
+          className="rounded-2xl p-4 flex items-center gap-3"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
         >
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(255,107,0,0.15)" }}
+            style={{ background: "rgba(249,115,22,0.1)" }}
           >
-            <Star size={16} style={{ color: "#FF6B00" }} />
+            <Star size={16} style={{ color: "#f97316" }} />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-muted-foreground">Active Plan</p>
+            <p className="text-xs" style={{ color: "#94a3b8" }}>
+              Active Plan
+            </p>
             {activePlan ? (
               <>
-                <p className="text-sm font-semibold text-foreground">
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: "#0f172a" }}
+                >
                   {activePlan.name}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs" style={{ color: "#475569" }}>
                   ₹{Number(activePlan.dailyEarning)}/day · {daysRemaining} days
                   remaining
                 </p>
               </>
             ) : (
-              <p className="text-sm font-semibold text-muted-foreground">
+              <p className="text-sm font-semibold" style={{ color: "#94a3b8" }}>
                 No active plan
               </p>
             )}
@@ -159,11 +175,16 @@ export default function ProfilePage() {
 
         {principal && (
           <div
-            className="rounded-2xl p-4 border border-white/8"
-            style={{ background: "oklch(0.17 0.016 260)" }}
+            className="rounded-2xl p-4"
+            style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
           >
-            <p className="text-xs text-muted-foreground mb-1">Principal ID</p>
-            <p className="text-xs font-mono text-foreground/70 break-all">
+            <p className="text-xs mb-1" style={{ color: "#94a3b8" }}>
+              Principal ID
+            </p>
+            <p
+              className="text-xs font-mono break-all"
+              style={{ color: "#475569" }}
+            >
               {shortPrincipal}
             </p>
           </div>
@@ -175,9 +196,11 @@ export default function ProfilePage() {
         onClick={handleLogout}
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all active:scale-98"
         style={{
-          background: "rgba(255,85,85,0.15)",
-          color: "#FF5555",
-          border: "1px solid rgba(255,85,85,0.25)",
+          background: "rgba(239,68,68,0.08)",
+          color: "#ef4444",
+          border: "1px solid rgba(239,68,68,0.2)",
+          touchAction: "manipulation",
+          cursor: "pointer",
         }}
         data-ocid="profile.delete_button"
       >
@@ -185,13 +208,16 @@ export default function ProfilePage() {
         Logout
       </button>
 
-      <footer className="mt-10 text-center text-xs text-muted-foreground/50">
+      <footer
+        className="mt-10 text-center text-xs"
+        style={{ color: "#94a3b8" }}
+      >
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-muted-foreground transition-colors"
+          className="underline hover:text-gray-500 transition-colors"
         >
           caffeine.ai
         </a>

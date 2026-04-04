@@ -30,8 +30,8 @@ const NOTIFICATIONS = [
     message:
       "Join Premium plan and earn ₹750/day for 120 days! Limited time offer.",
     time: "Just now",
-    color: "#FF6B00",
-    bg: "rgba(255,107,0,0.12)",
+    color: "#f97316",
+    bg: "rgba(249,115,22,0.08)",
   },
   {
     id: 2,
@@ -40,8 +40,8 @@ const NOTIFICATIONS = [
     message:
       "Standard plan members: share your link and earn ₹500 FREE for every referral this week!",
     time: "Today",
-    color: "#00C9A7",
-    bg: "rgba(0,201,167,0.12)",
+    color: "#10b981",
+    bg: "rgba(16,185,129,0.08)",
   },
   {
     id: 3,
@@ -50,8 +50,8 @@ const NOTIFICATIONS = [
     message:
       "Basic Plan now earns ₹150/day for 60 days with just ₹500 investment. Invest today!",
     time: "Yesterday",
-    color: "#4F8EF7",
-    bg: "rgba(79,142,247,0.12)",
+    color: "#3b82f6",
+    bg: "rgba(59,130,246,0.08)",
   },
 ];
 
@@ -71,21 +71,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col min-h-screen bg-background">
       {/* Top Nav */}
       <header
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 border-b border-white/8"
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 border-b border-gray-200"
         style={{
-          background: "oklch(0.17 0.016 260 / 0.98)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
+          background: "#ffffff",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
         }}
       >
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #FF6B00, #FF9500)" }}
+            style={{ background: "linear-gradient(135deg, #f97316, #fb923c)" }}
           >
             <span className="text-white text-sm font-bold">₹</span>
           </div>
-          <span className="font-display font-bold text-lg text-foreground tracking-tight">
+          <span
+            className="font-display font-bold text-lg tracking-tight"
+            style={{ color: "#0f172a" }}
+          >
             EarnHub
           </span>
         </div>
@@ -96,8 +98,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className="relative p-2 rounded-xl transition-colors"
             style={{
               background: showNotifications
-                ? "rgba(255,107,0,0.15)"
-                : "rgba(255,255,255,0.06)",
+                ? "rgba(249,115,22,0.1)"
+                : "#f1f5f9",
               cursor: "pointer",
               touchAction: "manipulation",
               minWidth: "44px",
@@ -109,12 +111,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             aria-label="Notifications"
             data-ocid="notifications.open_modal_button"
           >
-            <Bell size={19} className="text-foreground" />
+            <Bell size={19} style={{ color: "#475569" }} />
             {unreadCount > 0 && (
               <span
                 className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full text-white font-bold"
                 style={{
-                  background: "#FF6B00",
+                  background: "#f97316",
                   fontSize: "9px",
                   minWidth: "16px",
                   height: "16px",
@@ -125,8 +127,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </span>
             )}
           </button>
-          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-            <User size={15} className="text-foreground/70" />
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: "#f1f5f9" }}
+          >
+            <User size={15} style={{ color: "#94a3b8" }} />
           </div>
         </div>
       </header>
@@ -137,35 +142,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             className="fixed inset-0 z-40 w-full h-full cursor-default"
-            style={{ background: "rgba(0,0,0,0.5)", border: "none" }}
+            style={{ background: "rgba(0,0,0,0.3)", border: "none" }}
             onClick={() => setShowNotifications(false)}
             aria-label="Close notifications"
           />
           <div
-            className="fixed top-14 right-2 z-50 rounded-2xl shadow-2xl overflow-hidden"
+            className="fixed top-14 right-2 z-50 rounded-2xl shadow-xl overflow-hidden"
             style={{
               width: "calc(100vw - 16px)",
               maxWidth: "400px",
-              background: "oklch(0.20 0.018 260)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
             }}
             data-ocid="notifications.modal"
           >
             <div
               className="flex items-center justify-between px-4 py-3"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ borderBottom: "1px solid #e2e8f0" }}
             >
               <div className="flex items-center gap-2">
-                <Bell size={15} className="text-primary" />
-                <span className="text-foreground font-bold text-sm">
+                <Bell size={15} style={{ color: "#f97316" }} />
+                <span
+                  className="font-bold text-sm"
+                  style={{ color: "#0f172a" }}
+                >
                   Notifications
                 </span>
                 {unreadCount > 0 && (
                   <span
                     className="text-xs font-bold px-2 py-0.5 rounded-full"
                     style={{
-                      background: "rgba(255,107,0,0.2)",
-                      color: "#FF6B00",
+                      background: "rgba(249,115,22,0.1)",
+                      color: "#f97316",
                     }}
                   >
                     {unreadCount} new
@@ -177,8 +185,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <button
                     type="button"
                     onClick={markAllRead}
-                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                    style={{ touchAction: "manipulation", cursor: "pointer" }}
+                    className="text-xs hover:underline"
+                    style={{
+                      touchAction: "manipulation",
+                      cursor: "pointer",
+                      color: "#94a3b8",
+                    }}
                     data-ocid="notifications.confirm_button"
                   >
                     Mark all read
@@ -195,17 +207,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   }}
                   data-ocid="notifications.close_button"
                 >
-                  <X size={16} className="text-muted-foreground" />
+                  <X size={16} style={{ color: "#94a3b8" }} />
                 </button>
               </div>
             </div>
 
             <div
-              className="divide-y divide-white/5"
-              style={{
-                maxHeight: "65vh",
-                overflowY: "auto",
-              }}
+              className="divide-y divide-gray-100"
+              style={{ maxHeight: "65vh", overflowY: "auto" }}
             >
               {NOTIFICATIONS.map((notif) => {
                 const isRead = readIds.includes(notif.id);
@@ -213,7 +222,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <button
                     type="button"
                     key={notif.id}
-                    className="flex gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-white/5"
+                    className="flex gap-3 px-4 py-3.5 w-full text-left transition-colors hover:bg-gray-50"
                     style={{
                       background: isRead ? "transparent" : notif.bg,
                       opacity: isRead ? 0.65 : 1,
@@ -226,29 +235,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <div
                       className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-base"
                       style={{
-                        background: `${notif.color}20`,
-                        border: `1px solid ${notif.color}40`,
+                        background: `${notif.color}15`,
+                        border: `1px solid ${notif.color}30`,
                       }}
                     >
                       {notif.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-sm text-foreground">
+                        <span
+                          className="font-semibold text-sm"
+                          style={{ color: "#0f172a" }}
+                        >
                           {notif.title}
                         </span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                        <span
+                          className="text-xs flex-shrink-0"
+                          style={{ color: "#94a3b8" }}
+                        >
                           {notif.time}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                      <p
+                        className="text-xs mt-0.5 leading-relaxed"
+                        style={{ color: "#475569" }}
+                      >
                         {notif.message}
                       </p>
                       {!isRead && (
                         <span
                           className="inline-block mt-1.5 text-xs font-semibold px-2 py-0.5 rounded-full"
                           style={{
-                            background: `${notif.color}20`,
+                            background: `${notif.color}15`,
                             color: notif.color,
                           }}
                         >
@@ -261,8 +279,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               })}
             </div>
             <div
-              className="text-center py-2.5 text-xs text-muted-foreground"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+              className="text-center py-2.5 text-xs"
+              style={{ borderTop: "1px solid #e2e8f0", color: "#94a3b8" }}
             >
               Special offers just for you 🎉
             </div>
@@ -277,11 +295,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Bottom Nav */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-white/8"
+        className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-200"
         style={{
-          background: "oklch(0.17 0.016 260 / 0.98)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
+          background: "#ffffff",
+          boxShadow: "0 -1px 3px rgba(0,0,0,0.06)",
           height: "64px",
           willChange: "transform",
         }}
@@ -306,19 +323,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               data-ocid="nav.link"
             >
               <div
-                className={`p-1.5 rounded-lg transition-colors ${active ? "bg-primary/15" : ""}`}
+                className={`p-1.5 rounded-lg transition-colors ${active ? "bg-orange-50" : ""}`}
               >
                 <Icon
                   size={18}
                   style={{
-                    color: active ? "#FF6B00" : "rgba(255,255,255,0.55)",
+                    color: active ? "#f97316" : "#94a3b8",
                   }}
                 />
               </div>
               <span
                 className="font-medium"
                 style={{
-                  color: active ? "#FF6B00" : "rgba(255,255,255,0.55)",
+                  color: active ? "#f97316" : "#94a3b8",
                   fontSize: "9px",
                 }}
               >

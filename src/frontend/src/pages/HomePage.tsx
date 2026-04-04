@@ -92,23 +92,26 @@ export default function HomePage() {
     <div className="px-4 py-5 pb-8">
       {/* Greeting + Balance Card */}
       <div className="mb-5">
-        <p className="text-xs text-muted-foreground mb-0.5">Welcome back,</p>
-        <h1 className="text-lg font-bold text-foreground mb-4">{mobile} 👋</h1>
+        <p className="text-xs mb-0.5" style={{ color: "#94a3b8" }}>
+          Welcome back,
+        </p>
+        <h1 className="text-lg font-bold mb-4" style={{ color: "#0f172a" }}>
+          {mobile} 👋
+        </h1>
         <div
           className="rounded-2xl p-5 relative overflow-hidden"
           style={{
-            background:
-              "linear-gradient(135deg, oklch(0.28 0.10 250), oklch(0.20 0.06 260))",
+            background: "linear-gradient(135deg, #1e40af, #3b82f6)",
           }}
         >
           {/* decorative circles */}
           <div
             className="absolute -right-6 -top-6 w-24 h-24 rounded-full"
-            style={{ background: "rgba(255,107,0,0.12)" }}
+            style={{ background: "rgba(255,255,255,0.1)" }}
           />
           <div
             className="absolute -right-2 -bottom-4 w-16 h-16 rounded-full"
-            style={{ background: "rgba(0,201,167,0.1)" }}
+            style={{ background: "rgba(255,255,255,0.08)" }}
           />
           <p className="text-white/75 text-xs mb-1">Total Balance</p>
           <p
@@ -121,7 +124,7 @@ export default function HomePage() {
             <div className="mt-3 flex items-center gap-2">
               <div
                 className="w-2 h-2 rounded-full animate-pulse"
-                style={{ background: "#00C9A7" }}
+                style={{ background: "#4ADE80" }}
               />
               <p className="text-white/80 text-xs">
                 {activePlanDetails.name} · ₹
@@ -135,30 +138,33 @@ export default function HomePage() {
       {/* Active Plan Progress */}
       {activePlanDetails && (
         <div
-          className="rounded-2xl p-4 mb-5 border border-white/8"
-          style={{ background: "oklch(0.17 0.016 260)" }}
+          className="rounded-2xl p-4 mb-5"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-foreground/80">
+            <span
+              className="text-xs font-semibold"
+              style={{ color: "#475569" }}
+            >
               Active Plan: {activePlanDetails.name}
             </span>
-            <span className="text-xs font-bold" style={{ color: "#FF6B00" }}>
+            <span className="text-xs font-bold" style={{ color: "#f97316" }}>
               {daysRemaining} days left
             </span>
           </div>
           <div
             className="w-full h-2 rounded-full"
-            style={{ background: "rgba(255,255,255,0.08)" }}
+            style={{ background: "#e2e8f0" }}
           >
             <div
               className="h-2 rounded-full transition-all"
               style={{
                 width: `${progressPct}%`,
-                background: "linear-gradient(90deg, #FF6B00, #00C9A7)",
+                background: "linear-gradient(90deg, #f97316, #10b981)",
               }}
             />
           </div>
-          <p className="text-xs mt-1.5" style={{ color: "#e5e7eb" }}>
+          <p className="text-xs mt-1.5" style={{ color: "#475569" }}>
             ₹{Number(activePlanDetails.dailyEarning)}/day · {progressPct}%
             complete
           </p>
@@ -168,12 +174,12 @@ export default function HomePage() {
       {/* Available Plans */}
       <div className="mb-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-foreground">
+          <h2 className="text-base font-bold" style={{ color: "#0f172a" }}>
             Available Plans
           </h2>
           <span
             className="text-xs px-2 py-0.5 rounded-full"
-            style={{ background: "rgba(255,107,0,0.15)", color: "#FF6B00" }}
+            style={{ background: "rgba(249,115,22,0.1)", color: "#f97316" }}
           >
             Instant Returns
           </span>
@@ -233,7 +239,7 @@ export default function HomePage() {
                   type="button"
                   onClick={() => setSelectedPlan(plan)}
                   className="mt-3 w-full py-2.5 rounded-xl text-sm font-bold transition-all active:scale-98"
-                  style={{ background: g.accent, color: "#0D1117" }}
+                  style={{ background: g.accent, color: "#0f172a" }}
                   data-ocid={`plans.primary_button.${i + 1}`}
                 >
                   Buy Now — ₹{Number(plan.price).toLocaleString("en-IN")}
@@ -270,14 +276,14 @@ export default function HomePage() {
 
       <footer
         className="mt-10 text-center text-xs"
-        style={{ color: "rgba(255,255,255,0.45)" }}
+        style={{ color: "#94a3b8" }}
       >
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-white/70 transition-colors"
+          className="underline hover:text-gray-500 transition-colors"
         >
           caffeine.ai
         </a>

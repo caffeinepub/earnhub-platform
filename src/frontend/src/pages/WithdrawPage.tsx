@@ -8,18 +8,18 @@ function statusBadge(status: Variant_pending_completed_rejected) {
   const map = {
     [Variant_pending_completed_rejected.completed]: {
       label: "Completed",
-      color: "#00C9A7",
-      bg: "rgba(0,201,167,0.15)",
+      color: "#10b981",
+      bg: "rgba(16,185,129,0.1)",
     },
     [Variant_pending_completed_rejected.rejected]: {
       label: "Rejected",
-      color: "#FF5555",
-      bg: "rgba(255,85,85,0.15)",
+      color: "#ef4444",
+      bg: "rgba(239,68,68,0.1)",
     },
     [Variant_pending_completed_rejected.pending]: {
       label: "Pending",
-      color: "#FF9500",
-      bg: "rgba(255,149,0,0.15)",
+      color: "#f97316",
+      bg: "rgba(249,115,22,0.1)",
     },
   };
   const s = map[status] ?? map[Variant_pending_completed_rejected.pending];
@@ -100,43 +100,46 @@ export default function WithdrawPage() {
   const isLoading = isFetching || dataLoading;
 
   const inputClass =
-    "mt-1.5 w-full px-4 py-3.5 rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder-muted-foreground/50";
+    "mt-1.5 w-full px-4 py-3.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-300";
   const inputStyle = {
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
+    background: "#f1f5f9",
+    border: "1px solid #e2e8f0",
+    color: "#0f172a",
   };
 
   return (
     <div className="px-4 py-5 pb-8">
-      <h1 className="text-2xl font-bold text-foreground mb-5">Withdraw</h1>
+      <h1 className="text-2xl font-bold mb-5" style={{ color: "#0f172a" }}>
+        Withdraw
+      </h1>
       <div
-        className="rounded-2xl p-5 mb-6 border border-white/8"
-        style={{ background: "oklch(0.17 0.016 260)" }}
+        className="rounded-2xl p-5 mb-6"
+        style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
       >
         <div className="flex items-center gap-2 mb-4">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "rgba(255,107,0,0.15)" }}
+            style={{ background: "rgba(249,115,22,0.1)" }}
           >
-            <ArrowUpFromLine size={16} style={{ color: "#FF6B00" }} />
+            <ArrowUpFromLine size={16} style={{ color: "#f97316" }} />
           </div>
-          <h3 className="text-sm font-bold text-foreground">
+          <h3 className="text-sm font-bold" style={{ color: "#0f172a" }}>
             Request Withdrawal
           </h3>
         </div>
-        <p className="text-xs mb-4" style={{ color: "#e5e7eb" }}>
+        <p className="text-xs mb-4" style={{ color: "#475569" }}>
           Minimum withdrawal: ₹100. Funds sent to your UPI ID.
         </p>
         {success && (
           <div
             className="flex items-center gap-2 mb-4 p-3 rounded-xl"
             style={{
-              background: "rgba(0,201,167,0.1)",
-              border: "1px solid rgba(0,201,167,0.25)",
+              background: "rgba(16,185,129,0.08)",
+              border: "1px solid rgba(16,185,129,0.2)",
             }}
           >
-            <Check size={15} style={{ color: "#00C9A7" }} />
-            <p className="text-sm font-medium" style={{ color: "#00C9A7" }}>
+            <Check size={15} style={{ color: "#10b981" }} />
+            <p className="text-sm font-medium" style={{ color: "#10b981" }}>
               Withdrawal requested! Pending admin approval.
             </p>
           </div>
@@ -145,7 +148,8 @@ export default function WithdrawPage() {
           <div>
             <label
               htmlFor="withdraw-amount"
-              className="text-sm font-medium text-foreground/80"
+              className="text-sm font-medium"
+              style={{ color: "#475569" }}
             >
               Amount (₹)
             </label>
@@ -166,7 +170,8 @@ export default function WithdrawPage() {
           <div>
             <label
               htmlFor="withdraw-upi"
-              className="text-sm font-medium text-foreground/80"
+              className="text-sm font-medium"
+              style={{ color: "#475569" }}
             >
               UPI ID
             </label>
@@ -187,7 +192,7 @@ export default function WithdrawPage() {
           {error && (
             <p
               className="text-sm"
-              style={{ color: "#FF5555" }}
+              style={{ color: "#ef4444" }}
               data-ocid="withdraw.error_state"
             >
               {error}
@@ -199,8 +204,10 @@ export default function WithdrawPage() {
             disabled={submitting}
             className="w-full py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50"
             style={{
-              background: "linear-gradient(135deg, #FF6B00, #FF9500)",
-              color: "#0D1117",
+              background: "linear-gradient(135deg, #f97316, #fb923c)",
+              color: "#ffffff",
+              touchAction: "manipulation",
+              cursor: "pointer",
             }}
             data-ocid="withdraw.submit_button"
           >
@@ -209,13 +216,13 @@ export default function WithdrawPage() {
         </div>
       </div>
 
-      <h3 className="text-sm font-bold text-foreground mb-3">
+      <h3 className="text-sm font-bold mb-3" style={{ color: "#0f172a" }}>
         Withdrawal History
       </h3>
       {isLoading ? (
         <div
           className="text-sm"
-          style={{ color: "#e5e7eb" }}
+          style={{ color: "#475569" }}
           data-ocid="withdraw.loading_state"
         >
           Loading...
@@ -223,7 +230,7 @@ export default function WithdrawPage() {
       ) : withdrawals.length === 0 ? (
         <div
           className="text-center py-8 text-sm"
-          style={{ color: "#e5e7eb" }}
+          style={{ color: "#94a3b8" }}
           data-ocid="withdraw.empty_state"
         >
           <div className="text-3xl mb-2">💸</div>
@@ -237,15 +244,18 @@ export default function WithdrawPage() {
             .map((w, idx) => (
               <div
                 key={`${w.upiId}-${w.requestedAt.toString()}`}
-                className="rounded-xl p-3.5 flex items-center justify-between border border-white/6"
-                style={{ background: "oklch(0.17 0.016 260)" }}
+                className="rounded-xl p-3.5 flex items-center justify-between"
+                style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
                 data-ocid={`withdraw.item.${idx + 1}`}
               >
                 <div>
-                  <p className="text-sm font-semibold text-foreground">
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "#0f172a" }}
+                  >
                     ₹{Number(w.amount).toLocaleString("en-IN")}
                   </p>
-                  <p className="text-xs" style={{ color: "#e5e7eb" }}>
+                  <p className="text-xs" style={{ color: "#475569" }}>
                     {w.upiId}
                   </p>
                 </div>
@@ -257,14 +267,14 @@ export default function WithdrawPage() {
 
       <footer
         className="mt-10 text-center text-xs"
-        style={{ color: "rgba(255,255,255,0.45)" }}
+        style={{ color: "#94a3b8" }}
       >
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-white/70 transition-colors"
+          className="underline hover:text-gray-500 transition-colors"
         >
           caffeine.ai
         </a>

@@ -235,8 +235,8 @@ export default function AdminPage() {
   const inputClass =
     "w-full px-3 py-2.5 rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50";
   const inputStyle = {
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
+    background: "#f1f5f9",
+    border: "1px solid #e2e8f0",
   };
 
   // ─── Login Screen ────────────────────────────────────────────
@@ -244,8 +244,8 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div
-          className="w-full max-w-sm rounded-2xl p-6 border border-white/8"
-          style={{ background: "oklch(0.17 0.016 260)" }}
+          className="w-full max-w-sm rounded-2xl p-6 border border border-gray-200"
+          style={{ background: "#f8fafc" }}
         >
           <div className="flex flex-col items-center mb-6">
             <div
@@ -356,9 +356,9 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header
-        className="flex items-center justify-between px-4 h-14 border-b border-white/8"
+        className="flex items-center justify-between px-4 h-14 border-b border border-gray-200"
         style={{
-          background: "oklch(0.17 0.016 260 / 0.98)",
+          background: "#ffffff",
           backdropFilter: "blur(12px)",
         }}
       >
@@ -376,7 +376,7 @@ export default function AdminPage() {
             type="button"
             onClick={fetchAll}
             className="p-2 rounded-xl transition-colors"
-            style={{ background: "rgba(255,255,255,0.06)" }}
+            style={{ background: "#f1f5f9" }}
             data-ocid="admin.secondary_button"
           >
             <RefreshCw
@@ -411,7 +411,7 @@ export default function AdminPage() {
               background:
                 tab === key
                   ? "linear-gradient(135deg, #FF6B00, #FF9500)"
-                  : "rgba(255,255,255,0.06)",
+                  : "#f1f5f9",
               color: tab === key ? "#0D1117" : "rgba(255,255,255,0.65)",
             }}
             data-ocid="admin.tab"
@@ -457,8 +457,8 @@ export default function AdminPage() {
             {[...payments].reverse().map((pm, i) => (
               <div
                 key={`${pm.utrNumber}-${pm.submittedAt.toString()}`}
-                className="rounded-2xl p-4 border border-white/8"
-                style={{ background: "oklch(0.17 0.016 260)" }}
+                className="rounded-2xl p-4 border border border-gray-200"
+                style={{ background: "#f8fafc" }}
                 data-ocid={`admin.item.${i + 1}`}
               >
                 <div className="flex items-start justify-between mb-2">
@@ -555,8 +555,8 @@ export default function AdminPage() {
               return (
                 <div
                   key={`${dep.utrNumber}-${dep.submittedAt.toString()}`}
-                  className="rounded-2xl p-4 border border-white/8"
-                  style={{ background: "oklch(0.17 0.016 260)" }}
+                  className="rounded-2xl p-4 border border border-gray-200"
+                  style={{ background: "#f8fafc" }}
                   data-ocid={`admin.item.${i + 1}`}
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -644,8 +644,8 @@ export default function AdminPage() {
               return (
                 <div
                   key={`${wr.upiId}-${wr.requestedAt.toString()}`}
-                  className="rounded-2xl p-4 border border-white/8"
-                  style={{ background: "oklch(0.17 0.016 260)" }}
+                  className="rounded-2xl p-4 border border border-gray-200"
+                  style={{ background: "#f8fafc" }}
                   data-ocid={`admin.item.${i + 1}`}
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -788,7 +788,7 @@ export default function AdminPage() {
               <div
                 className="rounded-2xl p-4 border"
                 style={{
-                  background: "oklch(0.17 0.016 260)",
+                  background: "#f8fafc",
                   borderColor: "rgba(255,107,0,0.3)",
                 }}
                 data-ocid="admin.panel"
@@ -914,8 +914,8 @@ export default function AdminPage() {
               return (
                 <div
                   key={key}
-                  className="rounded-2xl p-4 border border-white/8"
-                  style={{ background: "oklch(0.17 0.016 260)" }}
+                  className="rounded-2xl p-4 border border border-gray-200"
+                  style={{ background: "#f8fafc" }}
                   data-ocid="admin.card"
                 >
                   <h3 className="text-sm font-bold text-foreground mb-3">
