@@ -1,7 +1,8 @@
-import { Check, X } from "lucide-react";
-import { useState } from "react";
+import { Camera, Check, QrCode, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PaymentApp, type Plan } from "../backend";
 import { useActor } from "../hooks/useActor";
+import { useQRScanner } from "../qr-code/useQRScanner";
 
 type Step = "select-app" | "qr" | "utr" | "success";
 
@@ -26,6 +27,116 @@ const APP_OPTIONS = [
   },
 ];
 
+function QRScannerInModal({
+  onScanned,
+}: { onScanned: (data: string) => void }) {
+  const scanner = useQRScanner({
+    facingMode: "environment",
+    scanInterval: 200,
+  });
+  const hasScanned = useRef(false);
+
+  useEffect(() => {
+    if (scanner.qrResults.length > 0 && !hasScanned.current) {
+      hasScanned.current = true;
+      onScanned(scanner.qrResults[0].data);
+    }
+  }, [scanner.qrResults, onScanned]);
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div
+        className="w-full rounded-2xl overflow-hidden relative"
+        style={{ background: "rgba(0,0,0,0.4)", aspectRatio: "1" }}
+      >
+        <video
+          ref={scanner.videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+          style={{ display: scanner.isActive ? "block" : "none" }}
+        />
+        <canvas ref={scanner.canvasRef} className="hidden" />
+
+        {!scanner.isActive && !scanner.isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <Camera size={36} style={{ color: "#FF6B00" }} />
+            <p className="text-xs text-foreground/70 text-center px-4">
+              {scanner.isSupported === false
+                ? "Camera not supported on this device"
+                : "Tap Start Camera to scan"}
+            </p>
+          </div>
+        )}
+
+        {scanner.isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div
+              className="w-7 h-7 rounded-full border-2 animate-spin"
+              style={{
+                borderColor: "rgba(255,107,0,0.2)",
+                borderTopColor: "#FF6B00",
+              }}
+            />
+            <p className="text-xs text-muted-foreground">Starting camera...</p>
+          </div>
+        )}
+
+        {scanner.isActive && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div
+              className="w-40 h-40 rounded-2xl"
+              style={{
+                border: "2px solid #FF6B00",
+                boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {scanner.error && (
+        <p className="text-xs text-center" style={{ color: "#FF5555" }}>
+          {scanner.error.message}
+        </p>
+      )}
+
+      {!scanner.isActive ? (
+        <button
+          type="button"
+          disabled={scanner.isLoading || scanner.isSupported === false}
+          onClick={() => {
+            hasScanned.current = false;
+            scanner.startScanning();
+          }}
+          className="w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+          style={{
+            background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+            color: "#0D1117",
+          }}
+        >
+          <Camera size={15} />
+          Start Camera
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => scanner.stopScanning()}
+          className="w-full py-3 rounded-xl font-semibold text-sm"
+          style={{
+            background: "rgba(255,85,85,0.15)",
+            color: "#FF5555",
+            border: "1px solid rgba(255,85,85,0.2)",
+          }}
+        >
+          Stop Camera
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function PaymentModal({
   plan,
   onClose,
@@ -37,6 +148,20 @@ export default function PaymentModal({
   const [utr, setUtr] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [qrTab, setQrTab] = useState<"show" | "scan">("show");
+
+  const handleScanned = useCallback((data: string) => {
+    setUtr(data);
+    setQrTab("show");
+    setStep("utr");
+  }, []);
+
+  // Reset tab when leaving qr step
+  useEffect(() => {
+    if (step !== "qr") {
+      setQrTab("show");
+    }
+  }, [step]);
 
   const handleSubmit = async () => {
     if (!utr.trim() || utr.length < 6) {
@@ -80,7 +205,7 @@ export default function PaymentModal({
                 Buy {plan.name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                ₹{Number(plan.price).toLocaleString("en-IN")} • ₹
+                \u20b9{Number(plan.price).toLocaleString("en-IN")} \u2022 \u20b9
                 {Number(plan.dailyEarning)}/day for {Number(plan.validityDays)}{" "}
                 days
               </p>
@@ -134,7 +259,7 @@ export default function PaymentModal({
                   <span className="font-semibold text-foreground">
                     {app.label}
                   </span>
-                  <span className="ml-auto text-muted-foreground">→</span>
+                  <span className="ml-auto text-muted-foreground">\u2192</span>
                 </button>
               ))}
             </div>
@@ -145,47 +270,90 @@ export default function PaymentModal({
           <>
             <div className="text-center mb-4">
               <p className="text-sm font-semibold text-foreground mb-1">
-                Scan & Pay ₹{Number(plan.price).toLocaleString("en-IN")}
+                Scan & Pay \u20b9{Number(plan.price).toLocaleString("en-IN")}
               </p>
               <p className="text-xs text-muted-foreground">
                 Use {selectedApp} to scan this QR code
               </p>
             </div>
-            <div className="flex justify-center mb-4">
-              <div className="p-3 rounded-2xl" style={{ background: "#fff" }}>
-                <img
-                  src="/assets/upi-qr.jpg"
-                  alt="UPI QR Code"
-                  className="w-56 h-56 object-contain rounded-xl"
-                />
-              </div>
-            </div>
+
+            {/* Tab Switcher */}
             <div
-              className="rounded-xl p-3 mb-5 text-center"
-              style={{
-                background: "rgba(255,107,0,0.1)",
-                border: "1px solid rgba(255,107,0,0.2)",
-              }}
+              className="flex gap-1 p-1 rounded-xl mb-4"
+              style={{ background: "rgba(255,255,255,0.06)" }}
             >
-              <p className="text-sm font-bold" style={{ color: "#FF6B00" }}>
-                Amount: ₹{Number(plan.price).toLocaleString("en-IN")}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Open GPay / PhonePe / Paytm and scan the code above
-              </p>
+              <button
+                type="button"
+                onClick={() => setQrTab("show")}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
+                style={{
+                  background: qrTab === "show" ? "#FF6B00" : "transparent",
+                  color: qrTab === "show" ? "#0D1117" : "rgba(255,255,255,0.6)",
+                }}
+                data-ocid="payment_modal.tab"
+              >
+                <QrCode size={13} />
+                Show QR
+              </button>
+              <button
+                type="button"
+                onClick={() => setQrTab("scan")}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
+                style={{
+                  background: qrTab === "scan" ? "#FF6B00" : "transparent",
+                  color: qrTab === "scan" ? "#0D1117" : "rgba(255,255,255,0.6)",
+                }}
+                data-ocid="payment_modal.tab"
+              >
+                <Camera size={13} />
+                Scan QR
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setStep("utr")}
-              className="w-full py-3.5 rounded-xl font-semibold text-sm"
-              style={{
-                background: "linear-gradient(135deg, #FF6B00, #FF9500)",
-                color: "#0D1117",
-              }}
-              data-ocid="payment_modal.primary_button"
-            >
-              I've Paid — Enter UTR Number
-            </button>
+
+            {qrTab === "show" ? (
+              <>
+                <div className="flex justify-center mb-4">
+                  <div
+                    className="p-3 rounded-2xl"
+                    style={{ background: "#fff" }}
+                  >
+                    <img
+                      src="/assets/upi-qr.jpg"
+                      alt="UPI QR Code"
+                      className="w-56 h-56 object-contain rounded-xl"
+                    />
+                  </div>
+                </div>
+                <div
+                  className="rounded-xl p-3 mb-5 text-center"
+                  style={{
+                    background: "rgba(255,107,0,0.1)",
+                    border: "1px solid rgba(255,107,0,0.2)",
+                  }}
+                >
+                  <p className="text-sm font-bold" style={{ color: "#FF6B00" }}>
+                    Amount: \u20b9{Number(plan.price).toLocaleString("en-IN")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Open GPay / PhonePe / Paytm and scan the code above
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep("utr")}
+                  className="w-full py-3.5 rounded-xl font-semibold text-sm"
+                  style={{
+                    background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+                    color: "#0D1117",
+                  }}
+                  data-ocid="payment_modal.primary_button"
+                >
+                  I've Paid \u2014 Enter UTR Number
+                </button>
+              </>
+            ) : (
+              <QRScannerInModal onScanned={handleScanned} />
+            )}
           </>
         )}
 
@@ -221,6 +389,11 @@ export default function PaymentModal({
                 }}
                 data-ocid="payment_modal.input"
               />
+              {utr && (
+                <p className="text-xs mt-1" style={{ color: "#00C9A7" }}>
+                  \u2713 UTR auto-filled from scan
+                </p>
+              )}
             </div>
             {error && (
               <p

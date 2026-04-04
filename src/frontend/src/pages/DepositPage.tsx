@@ -1,7 +1,8 @@
-import { ArrowDownToLine, Check } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { ArrowDownToLine, Camera, Check, Copy, QrCode } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Variant_pending_approved_rejected } from "../backend";
 import { useActor } from "../hooks/useActor";
+import { useQRScanner } from "../qr-code/useQRScanner";
 
 function statusBadge(status: Variant_pending_approved_rejected) {
   const map = {
@@ -32,6 +33,158 @@ function statusBadge(status: Variant_pending_approved_rejected) {
   );
 }
 
+function QRScannerSection({
+  onScanned,
+}: { onScanned: (data: string) => void }) {
+  const scanner = useQRScanner({
+    facingMode: "environment",
+    scanInterval: 200,
+  });
+  const hasScanned = useRef(false);
+
+  useEffect(() => {
+    if (scanner.qrResults.length > 0 && !hasScanned.current) {
+      hasScanned.current = true;
+      onScanned(scanner.qrResults[0].data);
+    }
+  }, [scanner.qrResults, onScanned]);
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      {/* Video preview */}
+      <div
+        className="w-full rounded-2xl overflow-hidden relative"
+        style={{ background: "rgba(0,0,0,0.4)", aspectRatio: "1" }}
+      >
+        <video
+          ref={scanner.videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+          style={{ display: scanner.isActive ? "block" : "none" }}
+        />
+        <canvas ref={scanner.canvasRef} className="hidden" />
+
+        {!scanner.isActive && !scanner.isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <Camera size={40} style={{ color: "#FF6B00" }} />
+            <p className="text-sm text-foreground/70 text-center px-4">
+              {scanner.isSupported === false
+                ? "Camera not supported on this device"
+                : "Tap the button below to start scanning"}
+            </p>
+          </div>
+        )}
+
+        {scanner.isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div
+              className="w-8 h-8 rounded-full border-2 animate-spin"
+              style={{
+                borderColor: "rgba(255,107,0,0.2)",
+                borderTopColor: "#FF6B00",
+              }}
+            />
+            <p className="text-sm text-muted-foreground">Starting camera...</p>
+          </div>
+        )}
+
+        {scanner.isActive && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div
+              className="w-48 h-48 rounded-2xl"
+              style={{
+                border: "2px solid #FF6B00",
+                boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {scanner.error && (
+        <p className="text-sm text-center" style={{ color: "#FF5555" }}>
+          {scanner.error.message}
+        </p>
+      )}
+
+      {scanner.qrResults.length > 0 && (
+        <div
+          className="w-full rounded-xl p-3"
+          style={{
+            background: "rgba(0,201,167,0.1)",
+            border: "1px solid rgba(0,201,167,0.25)",
+          }}
+        >
+          <p
+            className="text-xs font-semibold mb-1"
+            style={{ color: "#00C9A7" }}
+          >
+            QR Scanned!
+          </p>
+          <p className="text-xs text-foreground/70 break-all">
+            {scanner.qrResults[0].data}
+          </p>
+        </div>
+      )}
+
+      <div className="flex gap-2 w-full">
+        {!scanner.isActive ? (
+          <button
+            type="button"
+            disabled={scanner.isLoading || scanner.isSupported === false}
+            onClick={() => {
+              hasScanned.current = false;
+              scanner.startScanning();
+            }}
+            className="flex-1 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{
+              background: "linear-gradient(135deg, #FF6B00, #FF9500)",
+              color: "#0D1117",
+            }}
+          >
+            <Camera size={16} />
+            Start Camera
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => scanner.stopScanning()}
+            className="flex-1 py-3 rounded-xl font-semibold text-sm"
+            style={{
+              background: "rgba(255,85,85,0.15)",
+              color: "#FF5555",
+              border: "1px solid rgba(255,85,85,0.2)",
+            }}
+          >
+            Stop Camera
+          </button>
+        )}
+        {scanner.qrResults.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard
+                .writeText(scanner.qrResults[0].data)
+                .catch(() => {});
+            }}
+            className="px-4 py-3 rounded-xl font-semibold text-sm flex items-center gap-1.5"
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "#fff",
+            }}
+          >
+            <Copy size={14} />
+            Copy
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function DepositPage() {
   const { actor } = useActor();
   const [amount, setAmount] = useState("");
@@ -43,6 +196,7 @@ export default function DepositPage() {
     Awaited<ReturnType<NonNullable<typeof actor>["getCallerDepositRequests"]>>
   >([] as any);
   const [loading, setLoading] = useState(false);
+  const [qrTab, setQrTab] = useState<"show" | "scan">("show");
 
   const fetchDeposits = useCallback(() => {
     if (!actor) {
@@ -64,7 +218,7 @@ export default function DepositPage() {
   const handleSubmit = async () => {
     const amt = Number.parseInt(amount);
     if (!amount || Number.isNaN(amt) || amt < 100) {
-      setError("Minimum deposit is ₹100");
+      setError("Minimum deposit is \u20b9100");
       return;
     }
     if (!utr.trim() || utr.length < 6) {
@@ -107,48 +261,98 @@ export default function DepositPage() {
         <p className="text-sm font-bold text-foreground text-center mb-4">
           Scan to Pay via UPI
         </p>
-        <div className="flex justify-center mb-3">
-          <div className="p-3 rounded-2xl" style={{ background: "#fff" }}>
-            <img
-              src="/assets/upi-qr.jpg"
-              alt="UPI Payment QR Code"
-              className="w-56 h-56 object-contain rounded-xl"
-            />
-          </div>
+
+        {/* Tab Switcher */}
+        <div
+          className="flex gap-1 p-1 rounded-xl mb-4"
+          style={{ background: "rgba(255,255,255,0.06)" }}
+        >
+          <button
+            type="button"
+            onClick={() => setQrTab("show")}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
+            style={{
+              background: qrTab === "show" ? "#FF6B00" : "transparent",
+              color: qrTab === "show" ? "#0D1117" : "rgba(255,255,255,0.6)",
+            }}
+            data-ocid="deposit.tab"
+          >
+            <QrCode size={14} />
+            Show QR
+          </button>
+          <button
+            type="button"
+            onClick={() => setQrTab("scan")}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
+            style={{
+              background: qrTab === "scan" ? "#FF6B00" : "transparent",
+              color: qrTab === "scan" ? "#0D1117" : "rgba(255,255,255,0.6)",
+            }}
+            data-ocid="deposit.tab"
+          >
+            <Camera size={14} />
+            Scan QR
+          </button>
         </div>
-        <div className="flex justify-center gap-3 mt-3">
-          {[
-            {
-              label: "GPay",
-              img: "/assets/generated/googlepay-logo-transparent.dim_100x100.png",
-            },
-            {
-              label: "PhonePe",
-              img: "/assets/generated/phonepe-logo-transparent.dim_100x100.png",
-            },
-            {
-              label: "Paytm",
-              img: "/assets/generated/paytm-logo-transparent.dim_100x100.png",
-            },
-          ].map((app) => (
-            <div key={app.label} className="flex flex-col items-center gap-1">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: "rgba(255,255,255,0.08)" }}
-              >
+
+        {qrTab === "show" ? (
+          <>
+            <div className="flex justify-center mb-3">
+              <div className="p-3 rounded-2xl" style={{ background: "#fff" }}>
                 <img
-                  src={app.img}
-                  alt={app.label}
-                  className="w-7 h-7 object-contain"
+                  src="/assets/upi-qr.jpg"
+                  alt="UPI Payment QR Code"
+                  className="w-56 h-56 object-contain rounded-xl"
                 />
               </div>
-              <span className="text-xs text-muted-foreground">{app.label}</span>
             </div>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground text-center mt-3">
-          Scan using GPay, PhonePe, or Paytm to pay
-        </p>
+            <div className="flex justify-center gap-3 mt-3">
+              {[
+                {
+                  label: "GPay",
+                  img: "/assets/generated/googlepay-logo-transparent.dim_100x100.png",
+                },
+                {
+                  label: "PhonePe",
+                  img: "/assets/generated/phonepe-logo-transparent.dim_100x100.png",
+                },
+                {
+                  label: "Paytm",
+                  img: "/assets/generated/paytm-logo-transparent.dim_100x100.png",
+                },
+              ].map((app) => (
+                <div
+                  key={app.label}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                  >
+                    <img
+                      src={app.img}
+                      alt={app.label}
+                      className="w-7 h-7 object-contain"
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {app.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Scan using GPay, PhonePe, or Paytm to pay
+            </p>
+          </>
+        ) : (
+          <QRScannerSection
+            onScanned={(data) => {
+              setUtr(data);
+              setQrTab("show");
+            }}
+          />
+        )}
       </div>
 
       {/* Deposit Form */}
@@ -185,7 +389,7 @@ export default function DepositPage() {
               htmlFor="deposit-amount"
               className="text-sm font-medium text-foreground/80"
             >
-              Amount (₹)
+              Amount (\u20b9)
             </label>
             <input
               id="deposit-amount"
@@ -195,7 +399,7 @@ export default function DepositPage() {
                 setAmount(e.target.value);
                 setError("");
               }}
-              placeholder="Minimum ₹100"
+              placeholder="Minimum \u20b9100"
               className={inputClass}
               style={inputStyle}
               data-ocid="deposit.input"
@@ -221,6 +425,11 @@ export default function DepositPage() {
               style={inputStyle}
               data-ocid="deposit.textarea"
             />
+            {utr && (
+              <p className="text-xs mt-1" style={{ color: "#00C9A7" }}>
+                \u2713 UTR auto-filled from scan
+              </p>
+            )}
           </div>
           {error && (
             <p
@@ -263,7 +472,7 @@ export default function DepositPage() {
           className="text-center py-8 text-muted-foreground text-sm"
           data-ocid="deposit.empty_state"
         >
-          <div className="text-3xl mb-2">💰</div>
+          <div className="text-3xl mb-2">\ud83d\udcb0</div>
           No deposits yet
         </div>
       ) : (
@@ -280,7 +489,7 @@ export default function DepositPage() {
               >
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    ₹{Number(d.amount).toLocaleString("en-IN")}
+                    \u20b9{Number(d.amount).toLocaleString("en-IN")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     UTR: {d.utrNumber}
@@ -293,7 +502,7 @@ export default function DepositPage() {
       )}
 
       <footer className="mt-10 text-center text-xs text-muted-foreground/50">
-        © {new Date().getFullYear()}. Built with love using{" "}
+        \u00a9 {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
