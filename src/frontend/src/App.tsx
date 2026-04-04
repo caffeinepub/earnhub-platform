@@ -3,7 +3,7 @@ import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import Layout from "./components/Layout";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
-import { RouterContext } from "./hooks/useRouter";
+import { RouterContext, useRouter } from "./hooks/useRouter";
 import type { Route } from "./hooks/useRouter";
 import AdminPage from "./pages/AdminPage";
 import AuthPage from "./pages/AuthPage";
@@ -33,6 +33,7 @@ function RouterProvider({ children }: { children: React.ReactNode }) {
     } else {
       window.history.pushState(null, "", to);
     }
+    // Synchronously update state — no popstate dispatch needed
     setPathname(to);
   }, []);
 
@@ -43,17 +44,21 @@ function RouterProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({
+  children,
+  navigate,
+}: {
+  children: React.ReactNode;
+  navigate: (to: Route, options?: { replace?: boolean }) => void;
+}) {
   const { identity, isInitializing } = useInternetIdentity();
-  const [redirected, setRedirected] = useState(false);
 
   useEffect(() => {
-    if (!isInitializing && !identity && !redirected) {
-      setRedirected(true);
-      window.history.replaceState(null, "", "/auth");
-      window.dispatchEvent(new PopStateEvent("popstate"));
+    if (!isInitializing && !identity) {
+      // Use the context navigate directly — no window.dispatchEvent hack
+      navigate("/auth", { replace: true });
     }
-  }, [identity, isInitializing, redirected]);
+  }, [identity, isInitializing, navigate]);
 
   if (isInitializing) {
     return (
@@ -71,14 +76,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function AppRoutes() {
-  const [pathname, setPathname] = useState(getInitialPathname);
-
-  useEffect(() => {
-    const handler = () => setPathname(window.location.pathname);
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
-  }, []);
+// Single component that reads from RouterContext — no duplicate state
+function AppContent() {
+  const { pathname, navigate } = useRouter();
 
   if (pathname === "/auth") {
     return <AuthPage />;
@@ -99,7 +99,7 @@ function AppRoutes() {
   const page = protectedPages[pathname] ?? <HomePage />;
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute navigate={navigate}>
       <Layout>{page}</Layout>
     </ProtectedRoute>
   );
@@ -108,7 +108,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <RouterProvider>
-      <AppRoutes />
+      <AppContent />
       <Toaster position="top-center" theme="dark" />
     </RouterProvider>
   );

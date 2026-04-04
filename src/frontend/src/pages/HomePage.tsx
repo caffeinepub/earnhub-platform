@@ -110,7 +110,7 @@ export default function HomePage() {
             className="absolute -right-2 -bottom-4 w-16 h-16 rounded-full"
             style={{ background: "rgba(0,201,167,0.1)" }}
           />
-          <p className="text-white/60 text-xs mb-1">Total Balance</p>
+          <p className="text-white/75 text-xs mb-1">Total Balance</p>
           <p
             className="text-white text-4xl font-bold tracking-tight"
             data-ocid="wallet.balance"
@@ -123,7 +123,7 @@ export default function HomePage() {
                 className="w-2 h-2 rounded-full animate-pulse"
                 style={{ background: "#00C9A7" }}
               />
-              <p className="text-white/70 text-xs">
+              <p className="text-white/80 text-xs">
                 {activePlanDetails.name} · ₹
                 {Number(activePlanDetails.dailyEarning)}/day
               </p>
@@ -158,7 +158,7 @@ export default function HomePage() {
               }}
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="text-xs mt-1.5" style={{ color: "#e5e7eb" }}>
             ₹{Number(activePlanDetails.dailyEarning)}/day · {progressPct}%
             complete
           </p>
@@ -204,14 +204,14 @@ export default function HomePage() {
                     <h3 className="text-white font-bold text-base mb-0.5">
                       {plan.name} Plan
                     </h3>
-                    <p className="text-white/60 text-xs">
+                    <p className="text-white/75 text-xs">
                       {Number(plan.validityDays)} days validity
                     </p>
                     <div className="flex items-baseline gap-1 mt-2">
                       <span className="text-white text-2xl font-bold">
                         ₹{Number(plan.price).toLocaleString("en-IN")}
                       </span>
-                      <span className="text-white/50 text-xs">investment</span>
+                      <span className="text-white/70 text-xs">investment</span>
                     </div>
                   </div>
                   <div className="text-right">
@@ -224,7 +224,7 @@ export default function HomePage() {
                     >
                       ₹{Number(plan.dailyEarning)}
                     </p>
-                    <p className="text-white/40 text-xs mt-1">
+                    <p className="text-white/65 text-xs mt-1">
                       Total: ₹{totalReturn.toLocaleString("en-IN")}
                     </p>
                   </div>
@@ -268,13 +268,16 @@ export default function HomePage() {
         />
       )}
 
-      <footer className="mt-10 text-center text-xs text-muted-foreground/50">
+      <footer
+        className="mt-10 text-center text-xs"
+        style={{ color: "rgba(255,255,255,0.45)" }}
+      >
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-muted-foreground transition-colors"
+          className="underline hover:text-white/70 transition-colors"
         >
           caffeine.ai
         </a>

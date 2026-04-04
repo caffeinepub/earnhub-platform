@@ -124,7 +124,7 @@ export default function WithdrawPage() {
             Request Withdrawal
           </h3>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="text-xs mb-4" style={{ color: "#e5e7eb" }}>
           Minimum withdrawal: ₹100. Funds sent to your UPI ID.
         </p>
         {success && (
@@ -214,14 +214,16 @@ export default function WithdrawPage() {
       </h3>
       {isLoading ? (
         <div
-          className="text-muted-foreground text-sm"
+          className="text-sm"
+          style={{ color: "#e5e7eb" }}
           data-ocid="withdraw.loading_state"
         >
           Loading...
         </div>
       ) : withdrawals.length === 0 ? (
         <div
-          className="text-center py-8 text-muted-foreground text-sm"
+          className="text-center py-8 text-sm"
+          style={{ color: "#e5e7eb" }}
           data-ocid="withdraw.empty_state"
         >
           <div className="text-3xl mb-2">💸</div>
@@ -243,7 +245,9 @@ export default function WithdrawPage() {
                   <p className="text-sm font-semibold text-foreground">
                     ₹{Number(w.amount).toLocaleString("en-IN")}
                   </p>
-                  <p className="text-xs text-muted-foreground">{w.upiId}</p>
+                  <p className="text-xs" style={{ color: "#e5e7eb" }}>
+                    {w.upiId}
+                  </p>
                 </div>
                 {statusBadge(w.status)}
               </div>
@@ -251,13 +255,16 @@ export default function WithdrawPage() {
         </div>
       )}
 
-      <footer className="mt-10 text-center text-xs text-muted-foreground/50">
+      <footer
+        className="mt-10 text-center text-xs"
+        style={{ color: "rgba(255,255,255,0.45)" }}
+      >
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-muted-foreground transition-colors"
+          className="underline hover:text-white/70 transition-colors"
         >
           caffeine.ai
         </a>

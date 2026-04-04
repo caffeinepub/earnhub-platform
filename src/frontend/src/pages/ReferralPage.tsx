@@ -84,7 +84,7 @@ export default function ReferralPage() {
           </div>
           <div>
             <h1 className="text-white text-xl font-bold">Referral Program</h1>
-            <p className="text-white/55 text-xs">Share & Earn Together</p>
+            <p className="text-white/75 text-xs">Share &amp; Earn Together</p>
           </div>
         </div>
       </div>
@@ -124,7 +124,7 @@ export default function ReferralPage() {
               <h2 className="text-white font-bold text-base leading-snug">
                 Earn ₹500 Free on Every Referral!
               </h2>
-              <p className="text-white/70 text-xs mt-1 leading-relaxed">
+              <p className="text-white/80 text-xs mt-1 leading-relaxed">
                 Share your link. When your friend signs up and buys the{" "}
                 <span className="font-bold text-white">Basic Plan (₹500)</span>,
                 you get{" "}
@@ -157,7 +157,7 @@ export default function ReferralPage() {
                 >
                   {step}
                 </div>
-                <p className="text-white/65 text-xs leading-tight">{label}</p>
+                <p className="text-white/80 text-xs leading-tight">{label}</p>
               </div>
             ))}
           </div>
@@ -179,7 +179,10 @@ export default function ReferralPage() {
           >
             <div className="flex items-center gap-2 mb-1">
               <Users size={14} style={{ color: "#4F8EF7" }} />
-              <span className="text-xs text-muted-foreground font-medium">
+              <span
+                className="text-xs font-medium"
+                style={{ color: "#e5e7eb" }}
+              >
                 Total Referrals
               </span>
             </div>
@@ -194,7 +197,7 @@ export default function ReferralPage() {
                 {totalReferrals}
               </p>
             )}
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: "#e5e7eb" }}>
               Friends joined
             </p>
           </div>
@@ -204,7 +207,10 @@ export default function ReferralPage() {
           >
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp size={14} style={{ color: "#00C9A7" }} />
-              <span className="text-xs text-muted-foreground font-medium">
+              <span
+                className="text-xs font-medium"
+                style={{ color: "#e5e7eb" }}
+              >
                 Total Earned
               </span>
             </div>
@@ -219,7 +225,7 @@ export default function ReferralPage() {
                 ₹{totalEarnings}
               </p>
             )}
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: "#e5e7eb" }}>
               Referral earnings
             </p>
           </div>
@@ -238,12 +244,13 @@ export default function ReferralPage() {
               <div
                 className="flex items-center gap-2 rounded-xl p-3 mb-3"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
                 }}
               >
                 <p
-                  className="flex-1 text-xs font-mono text-muted-foreground truncate select-all"
+                  className="flex-1 text-xs font-mono truncate select-all"
+                  style={{ color: "#e5e7eb" }}
                   data-ocid="referral.input"
                 >
                   {referralLink}
@@ -277,7 +284,8 @@ export default function ReferralPage() {
             </>
           ) : (
             <div
-              className="text-center py-4 text-muted-foreground text-sm"
+              className="text-center py-4 text-sm"
+              style={{ color: "#e5e7eb" }}
               data-ocid="referral.loading_state"
             >
               Loading your referral link...
@@ -291,13 +299,14 @@ export default function ReferralPage() {
           style={{ background: "oklch(0.17 0.016 260)" }}
         >
           <h3 className="text-sm font-bold text-foreground mb-3">
-            📋 Terms & Conditions
+            📋 Terms &amp; Conditions
           </h3>
           <ul className="space-y-2">
             {TERMS.map((item, index) => (
               <li
                 key={item}
-                className="flex items-start gap-2 text-xs text-muted-foreground"
+                className="flex items-start gap-2 text-xs"
+                style={{ color: "#e5e7eb" }}
               >
                 <span
                   className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 mt-0.5"
@@ -316,13 +325,16 @@ export default function ReferralPage() {
           </ul>
         </div>
 
-        <footer className="text-center text-xs text-muted-foreground/50 pt-2">
+        <footer
+          className="text-center text-xs pt-2"
+          style={{ color: "rgba(255,255,255,0.45)" }}
+        >
           © {new Date().getFullYear()}. Built with love using{" "}
           <a
             href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-muted-foreground transition-colors"
+            className="underline hover:text-white/70 transition-colors"
           >
             caffeine.ai
           </a>

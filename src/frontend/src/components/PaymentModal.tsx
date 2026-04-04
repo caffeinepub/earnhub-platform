@@ -12,20 +12,45 @@ const APP_OPTIONS = [
     label: "PhonePe",
     logo: "/assets/generated/phonepe-logo-transparent.dim_100x100.png",
     color: "#7B2FF7",
+    initial: "P",
   },
   {
     id: PaymentApp.GooglePay,
     label: "Google Pay",
     logo: "/assets/generated/googlepay-logo-transparent.dim_100x100.png",
     color: "#4285F4",
+    initial: "G",
   },
   {
     id: PaymentApp.Paytm,
     label: "Paytm",
     logo: "/assets/generated/paytm-logo-transparent.dim_100x100.png",
     color: "#00BAF2",
+    initial: "Pt",
   },
 ];
+
+function AppLogo({ app }: { app: (typeof APP_OPTIONS)[number] }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div
+        className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs"
+        style={{ background: app.color }}
+      >
+        {app.initial}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={app.logo}
+      alt={app.label}
+      className="w-8 h-8 object-contain"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 function QRScannerInModal({
   onScanned,
@@ -62,7 +87,10 @@ function QRScannerInModal({
         {!scanner.isActive && !scanner.isLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <Camera size={36} style={{ color: "#FF6B00" }} />
-            <p className="text-xs text-foreground/70 text-center px-4">
+            <p
+              className="text-xs text-center px-4"
+              style={{ color: "#e5e7eb" }}
+            >
               {scanner.isSupported === false
                 ? "Camera not supported on this device"
                 : "Tap Start Camera to scan"}
@@ -79,7 +107,9 @@ function QRScannerInModal({
                 borderTopColor: "#FF6B00",
               }}
             />
-            <p className="text-xs text-muted-foreground">Starting camera...</p>
+            <p className="text-xs" style={{ color: "#e5e7eb" }}>
+              Starting camera...
+            </p>
           </div>
         )}
 
@@ -114,6 +144,8 @@ function QRScannerInModal({
           style={{
             background: "linear-gradient(135deg, #FF6B00, #FF9500)",
             color: "#0D1117",
+            touchAction: "manipulation",
+            cursor: "pointer",
           }}
         >
           <Camera size={15} />
@@ -128,12 +160,44 @@ function QRScannerInModal({
             background: "rgba(255,85,85,0.15)",
             color: "#FF5555",
             border: "1px solid rgba(255,85,85,0.2)",
+            touchAction: "manipulation",
+            cursor: "pointer",
           }}
         >
           Stop Camera
         </button>
       )}
     </div>
+  );
+}
+
+function UPIQRImage() {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div
+        className="w-56 h-56 rounded-xl flex flex-col items-center justify-center gap-2"
+        style={{
+          background: "rgba(255,255,255,0.05)",
+          border: "2px dashed rgba(255,255,255,0.2)",
+        }}
+      >
+        <QrCode size={48} style={{ color: "#FF6B00" }} />
+        <p className="text-xs text-center px-4" style={{ color: "#e5e7eb" }}>
+          QR code unavailable. Please ask admin for the UPI QR.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src="/assets/upi-qr.jpg"
+      alt="UPI QR Code"
+      className="w-56 h-56 object-contain rounded-xl"
+      onError={() => setFailed(true)}
+    />
   );
 }
 
@@ -180,6 +244,12 @@ export default function PaymentModal({
     }
   };
 
+  const btnBase: React.CSSProperties = {
+    touchAction: "manipulation",
+    cursor: "pointer",
+    WebkitTapHighlightColor: "transparent",
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
@@ -204,8 +274,8 @@ export default function PaymentModal({
               <h3 className="text-lg font-bold text-foreground">
                 Buy {plan.name}
               </h3>
-              <p className="text-sm text-muted-foreground">
-                \u20b9{Number(plan.price).toLocaleString("en-IN")} \u2022 \u20b9
+              <p className="text-sm" style={{ color: "#e5e7eb" }}>
+                ₹{Number(plan.price).toLocaleString("en-IN")} · ₹
                 {Number(plan.dailyEarning)}/day for {Number(plan.validityDays)}{" "}
                 days
               </p>
@@ -214,10 +284,15 @@ export default function PaymentModal({
               type="button"
               onClick={onClose}
               className="p-2 rounded-xl"
-              style={{ background: "rgba(255,255,255,0.08)" }}
+              style={{
+                ...btnBase,
+                background: "rgba(255,255,255,0.08)",
+                minWidth: "40px",
+                minHeight: "40px",
+              }}
               data-ocid="payment_modal.close_button"
             >
-              <X size={18} className="text-muted-foreground" />
+              <X size={18} style={{ color: "#e5e7eb" }} />
             </button>
           </div>
         )}
@@ -236,30 +311,30 @@ export default function PaymentModal({
                     setSelectedApp(app.id);
                     setStep("qr");
                   }}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl transition-all active:scale-98"
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl transition-all"
                   style={{
+                    ...btnBase,
                     background: "rgba(255,255,255,0.06)",
                     border: "1px solid rgba(255,255,255,0.1)",
+                    minHeight: "64px",
                   }}
                   data-ocid="payment_modal.button"
                 >
                   <div
-                    className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center"
+                    className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
                     style={{
                       background: `${app.color}15`,
                       border: `1px solid ${app.color}30`,
                     }}
                   >
-                    <img
-                      src={app.logo}
-                      alt={app.label}
-                      className="w-8 h-8 object-contain"
-                    />
+                    <AppLogo app={app} />
                   </div>
                   <span className="font-semibold text-foreground">
                     {app.label}
                   </span>
-                  <span className="ml-auto text-muted-foreground">\u2192</span>
+                  <span className="ml-auto" style={{ color: "#e5e7eb" }}>
+                    →
+                  </span>
                 </button>
               ))}
             </div>
@@ -270,10 +345,10 @@ export default function PaymentModal({
           <>
             <div className="text-center mb-4">
               <p className="text-sm font-semibold text-foreground mb-1">
-                Scan & Pay \u20b9{Number(plan.price).toLocaleString("en-IN")}
+                Scan &amp; Pay ₹{Number(plan.price).toLocaleString("en-IN")}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Use {selectedApp} to scan this QR code
+              <p className="text-xs" style={{ color: "#e5e7eb" }}>
+                Use your UPI app to scan this QR code
               </p>
             </div>
 
@@ -287,8 +362,10 @@ export default function PaymentModal({
                 onClick={() => setQrTab("show")}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
                 style={{
+                  ...btnBase,
                   background: qrTab === "show" ? "#FF6B00" : "transparent",
-                  color: qrTab === "show" ? "#0D1117" : "rgba(255,255,255,0.6)",
+                  color:
+                    qrTab === "show" ? "#0D1117" : "rgba(255,255,255,0.85)",
                 }}
                 data-ocid="payment_modal.tab"
               >
@@ -300,8 +377,10 @@ export default function PaymentModal({
                 onClick={() => setQrTab("scan")}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
                 style={{
+                  ...btnBase,
                   background: qrTab === "scan" ? "#FF6B00" : "transparent",
-                  color: qrTab === "scan" ? "#0D1117" : "rgba(255,255,255,0.6)",
+                  color:
+                    qrTab === "scan" ? "#0D1117" : "rgba(255,255,255,0.85)",
                 }}
                 data-ocid="payment_modal.tab"
               >
@@ -317,11 +396,7 @@ export default function PaymentModal({
                     className="p-3 rounded-2xl"
                     style={{ background: "#fff" }}
                   >
-                    <img
-                      src="/assets/upi-qr.jpg"
-                      alt="UPI QR Code"
-                      className="w-56 h-56 object-contain rounded-xl"
-                    />
+                    <UPIQRImage />
                   </div>
                 </div>
                 <div
@@ -332,9 +407,9 @@ export default function PaymentModal({
                   }}
                 >
                   <p className="text-sm font-bold" style={{ color: "#FF6B00" }}>
-                    Amount: \u20b9{Number(plan.price).toLocaleString("en-IN")}
+                    Amount: ₹{Number(plan.price).toLocaleString("en-IN")}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs mt-1" style={{ color: "#e5e7eb" }}>
                     Open GPay / PhonePe / Paytm and scan the code above
                   </p>
                 </div>
@@ -343,12 +418,13 @@ export default function PaymentModal({
                   onClick={() => setStep("utr")}
                   className="w-full py-3.5 rounded-xl font-semibold text-sm"
                   style={{
+                    ...btnBase,
                     background: "linear-gradient(135deg, #FF6B00, #FF9500)",
                     color: "#0D1117",
                   }}
                   data-ocid="payment_modal.primary_button"
                 >
-                  I've Paid \u2014 Enter UTR Number
+                  I&apos;ve Paid — Enter UTR Number
                 </button>
               </>
             ) : (
@@ -362,8 +438,8 @@ export default function PaymentModal({
             <p className="text-sm font-semibold text-foreground mb-1">
               Enter Transaction Details
             </p>
-            <p className="text-xs text-muted-foreground mb-4">
-              Find the UTR / Reference ID in your payment app's transaction
+            <p className="text-xs mb-4" style={{ color: "#e5e7eb" }}>
+              Find the UTR / Reference ID in your payment app&apos;s transaction
               history
             </p>
             <div className="mb-4">
@@ -391,7 +467,7 @@ export default function PaymentModal({
               />
               {utr && (
                 <p className="text-xs mt-1" style={{ color: "#00C9A7" }}>
-                  \u2713 UTR auto-filled from scan
+                  ✓ UTR auto-filled from scan
                 </p>
               )}
             </div>
@@ -410,6 +486,7 @@ export default function PaymentModal({
               disabled={submitting}
               className="w-full py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50"
               style={{
+                ...btnBase,
                 background: "linear-gradient(135deg, #FF6B00, #FF9500)",
                 color: "#0D1117",
               }}
@@ -434,10 +511,16 @@ export default function PaymentModal({
             <h3 className="text-xl font-bold text-foreground mb-2">
               Payment Submitted!
             </h3>
-            <p className="text-muted-foreground text-sm text-center mb-1">
+            <p
+              className="text-sm text-center mb-1"
+              style={{ color: "#e5e7eb" }}
+            >
               Your payment is under review.
             </p>
-            <p className="text-muted-foreground text-xs text-center mb-6">
+            <p
+              className="text-xs text-center mb-6"
+              style={{ color: "#e5e7eb" }}
+            >
               Admin will verify and activate your plan within 24 hours.
             </p>
             <div
@@ -455,6 +538,7 @@ export default function PaymentModal({
               onClick={onSuccess}
               className="w-full py-3.5 rounded-xl font-semibold text-sm"
               style={{
+                ...btnBase,
                 background: "linear-gradient(135deg, #FF6B00, #FF9500)",
                 color: "#0D1117",
               }}

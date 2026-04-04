@@ -2,95 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: "Figtree";
-  src: url("/assets/fonts/Figtree.woff2") format("woff2");
-  font-weight: 300 900;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "BricolageGrotesque";
-  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
-  font-weight: 200 800;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "PlusJakartaSans";
-  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
-  font-weight: 300 700;
-  font-display: swap;
+@layer base {
+  :root {
+    --background: oklch(0.13 0.012 262);
+    --foreground: oklch(0.95 0.005 262);
+    --card: oklch(0.17 0.016 260);
+    --card-foreground: oklch(0.95 0.005 262);
+    --popover: oklch(0.17 0.016 260);
+    --popover-foreground: oklch(0.95 0.005 262);
+    --primary: oklch(0.68 0.19 43);
+    --primary-foreground: oklch(0.13 0.012 262);
+    --secondary: oklch(0.22 0.02 262);
+    --secondary-foreground: oklch(0.85 0.01 262);
+    --muted: oklch(0.22 0.02 262);
+    --muted-foreground: oklch(0.75 0.01 262);
+    --accent: oklch(0.22 0.02 262);
+    --accent-foreground: oklch(0.85 0.01 262);
+    --destructive: oklch(0.55 0.22 25);
+    --destructive-foreground: oklch(0.95 0.005 262);
+    --border: oklch(0.28 0.02 262);
+    --input: oklch(0.22 0.02 262);
+    --ring: oklch(0.68 0.19 43);
+    --radius: 0.75rem;
+  }
 }
 
 @layer base {
-  :root {
-    --radius: 0.875rem;
-
-    /* EarnHub Dark Theme — deep charcoal bg, vibrant orange accent, electric teal secondary */
-    /* Background: #0D1117 slate-black → oklch(0.13 0.01 260) */
-    /* Card: #161B22 → oklch(0.17 0.015 260) */
-    /* Orange: #FF6B00 → oklch(0.68 0.22 43) */
-    /* Teal: #00C9A7 → oklch(0.74 0.13 175) */
-    /* Navy: #1E3A5F → oklch(0.30 0.08 250) */
-
-    --background: 0.13 0.012 262;
-    --foreground: 0.96 0.005 260;
-    --card: 0.17 0.016 260;
-    --card-foreground: 0.94 0.005 260;
-    --popover: 0.2 0.018 260;
-    --popover-foreground: 0.94 0.005 260;
-    --primary: 0.68 0.22 43;
-    --primary-foreground: 0.1 0 0;
-    --secondary: 0.74 0.13 175;
-    --secondary-foreground: 0.08 0 0;
-    --muted: 0.22 0.015 260;
-    --muted-foreground: 0.6 0.01 260;
-    --accent: 0.68 0.22 43;
-    --accent-foreground: 0.1 0 0;
-    --destructive: 0.6 0.22 25;
-    --destructive-foreground: 0.98 0 0;
-    --border: 1 0 0 / 10%;
-    --input: 1 0 0 / 10%;
-    --ring: 0.68 0.22 43;
-    --chart-1: 0.68 0.22 43;
-    --chart-2: 0.74 0.13 175;
-    --chart-3: 0.48 0.12 250;
-    --chart-4: 0.6 0.22 25;
-    --chart-5: 0.82 0.12 84;
-    --sidebar: 0.17 0.016 260;
-    --sidebar-foreground: 0.94 0.005 260;
-    --sidebar-primary: 0.68 0.22 43;
-    --sidebar-primary-foreground: 0.1 0 0;
-    --sidebar-accent: 0.74 0.13 175;
-    --sidebar-accent-foreground: 0.08 0 0;
-    --sidebar-border: 1 0 0 / 10%;
-    --sidebar-ring: 0.68 0.22 43;
-  }
-
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
-    font-family: "PlusJakartaSans", "Figtree", system-ui, sans-serif;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  /* Allow text selection in inputs */
+  input,
+  textarea,
+  [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Remove 300ms tap delay globally */
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Remove default tap highlight on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Scrollbar styling for dark theme */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
-}
+@layer utilities {
+  .font-display {
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+  }
 
-/* Mobile safe area */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

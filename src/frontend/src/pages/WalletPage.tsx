@@ -116,8 +116,8 @@ export default function WalletPage() {
           style={{ background: "rgba(255,107,0,0.1)" }}
         />
         <div className="flex items-center gap-2 mb-2">
-          <Wallet size={14} className="text-white/60" />
-          <p className="text-white/60 text-xs">Available Balance</p>
+          <Wallet size={14} className="text-white/75" />
+          <p className="text-white/75 text-xs">Available Balance</p>
         </div>
         <p
           className="text-white text-4xl font-bold tracking-tight mb-1"
@@ -126,7 +126,7 @@ export default function WalletPage() {
           ₹{balance.toLocaleString("en-IN")}
         </p>
         {activePlan && (
-          <p className="text-white/60 text-xs">
+          <p className="text-white/80 text-xs">
             Earning ₹{Number(activePlan.dailyEarning)}/day · {daysActive} days
             active
           </p>
@@ -155,7 +155,7 @@ export default function WalletPage() {
               { label: "Days Active", value: daysActive.toString() },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{label}</span>
+                <span style={{ color: "#e5e7eb" }}>{label}</span>
                 <span className="font-semibold text-foreground">{value}</span>
               </div>
             ))}
@@ -195,14 +195,16 @@ export default function WalletPage() {
       </h3>
       {loading ? (
         <div
-          className="text-muted-foreground text-sm"
+          className="text-sm"
+          style={{ color: "#e5e7eb" }}
           data-ocid="wallet.loading_state"
         >
           Loading...
         </div>
       ) : withdrawals.length === 0 ? (
         <div
-          className="text-center py-8 text-muted-foreground text-sm"
+          className="text-center py-8 text-sm"
+          style={{ color: "#e5e7eb" }}
           data-ocid="wallet.empty_state"
         >
           <div className="text-3xl mb-2">💸</div>
@@ -224,7 +226,9 @@ export default function WalletPage() {
                   <p className="text-sm font-semibold text-foreground">
                     ₹{Number(w.amount).toLocaleString("en-IN")}
                   </p>
-                  <p className="text-xs text-muted-foreground">{w.upiId}</p>
+                  <p className="text-xs" style={{ color: "#e5e7eb" }}>
+                    {w.upiId}
+                  </p>
                 </div>
                 {statusBadge(w.status)}
               </div>
@@ -232,13 +236,16 @@ export default function WalletPage() {
         </div>
       )}
 
-      <footer className="mt-10 text-center text-xs text-muted-foreground/50">
+      <footer
+        className="mt-10 text-center text-xs"
+        style={{ color: "rgba(255,255,255,0.45)" }}
+      >
         © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-muted-foreground transition-colors"
+          className="underline hover:text-white/70 transition-colors"
         >
           caffeine.ai
         </a>

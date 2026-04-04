@@ -4,7 +4,6 @@ import {
   Bell,
   Gift,
   Home,
-  Tag,
   User,
   Wallet,
   X,
@@ -76,6 +75,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         style={{
           background: "oklch(0.17 0.016 260 / 0.98)",
           backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
       >
         <div className="flex items-center gap-2.5">
@@ -93,11 +93,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => setShowNotifications((prev) => !prev)}
-            className="relative p-2 rounded-xl transition-colors active:scale-95"
+            className="relative p-2 rounded-xl transition-colors"
             style={{
               background: showNotifications
                 ? "rgba(255,107,0,0.15)"
                 : "rgba(255,255,255,0.06)",
+              cursor: "pointer",
+              touchAction: "manipulation",
+              minWidth: "44px",
+              minHeight: "44px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
             aria-label="Notifications"
             data-ocid="notifications.open_modal_button"
@@ -135,7 +142,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             aria-label="Close notifications"
           />
           <div
-            className="fixed top-14 right-2 z-50 rounded-2xl shadow-2xl overflow-hidden animate-fade-in"
+            className="fixed top-14 right-2 z-50 rounded-2xl shadow-2xl overflow-hidden"
             style={{
               width: "calc(100vw - 16px)",
               maxWidth: "400px",
@@ -171,6 +178,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     type="button"
                     onClick={markAllRead}
                     className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                    style={{ touchAction: "manipulation", cursor: "pointer" }}
                     data-ocid="notifications.confirm_button"
                   >
                     Mark all read
@@ -180,6 +188,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   type="button"
                   onClick={() => setShowNotifications(false)}
                   aria-label="Close"
+                  style={{
+                    touchAction: "manipulation",
+                    cursor: "pointer",
+                    padding: "4px",
+                  }}
                   data-ocid="notifications.close_button"
                 >
                   <X size={16} className="text-muted-foreground" />
@@ -204,6 +217,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     style={{
                       background: isRead ? "transparent" : notif.bg,
                       opacity: isRead ? 0.65 : 1,
+                      touchAction: "manipulation",
+                      cursor: "pointer",
                     }}
                     onClick={() => setReadIds((prev) => [...prev, notif.id])}
                     data-ocid="notifications.row"
@@ -266,7 +281,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         style={{
           background: "oklch(0.17 0.016 260 / 0.98)",
           backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
           height: "64px",
+          willChange: "transform",
         }}
       >
         {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
@@ -276,7 +293,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               type="button"
               key={path}
               onClick={() => navigate(path as NavPath)}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95"
+              className="flex-1 flex flex-col items-center justify-center gap-0.5"
+              style={{
+                cursor: "pointer",
+                touchAction: "manipulation",
+                WebkitTapHighlightColor: "transparent",
+                outline: "none",
+                border: "none",
+                background: "transparent",
+                minHeight: "44px",
+              }}
               data-ocid="nav.link"
             >
               <div

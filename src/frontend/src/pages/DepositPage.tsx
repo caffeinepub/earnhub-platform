@@ -69,7 +69,7 @@ function QRScannerSection({
         {!scanner.isActive && !scanner.isLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <Camera size={40} style={{ color: "#FF6B00" }} />
-            <p className="text-sm text-foreground/70 text-center px-4">
+            <p className="text-sm text-foreground/80 text-center px-4">
               {scanner.isSupported === false
                 ? "Camera not supported on this device"
                 : "Tap the button below to start scanning"}
@@ -86,7 +86,9 @@ function QRScannerSection({
                 borderTopColor: "#FF6B00",
               }}
             />
-            <p className="text-sm text-muted-foreground">Starting camera...</p>
+            <p className="text-sm" style={{ color: "#e5e7eb" }}>
+              Starting camera...
+            </p>
           </div>
         )}
 
@@ -123,7 +125,7 @@ function QRScannerSection({
           >
             QR Scanned!
           </p>
-          <p className="text-xs text-foreground/70 break-all">
+          <p className="text-xs break-all" style={{ color: "#e5e7eb" }}>
             {scanner.qrResults[0].data}
           </p>
         </div>
@@ -142,6 +144,8 @@ function QRScannerSection({
             style={{
               background: "linear-gradient(135deg, #FF6B00, #FF9500)",
               color: "#0D1117",
+              touchAction: "manipulation",
+              cursor: "pointer",
             }}
           >
             <Camera size={16} />
@@ -156,6 +160,8 @@ function QRScannerSection({
               background: "rgba(255,85,85,0.15)",
               color: "#FF5555",
               border: "1px solid rgba(255,85,85,0.2)",
+              touchAction: "manipulation",
+              cursor: "pointer",
             }}
           >
             Stop Camera
@@ -174,6 +180,8 @@ function QRScannerSection({
               background: "rgba(255,255,255,0.06)",
               border: "1px solid rgba(255,255,255,0.12)",
               color: "#fff",
+              touchAction: "manipulation",
+              cursor: "pointer",
             }}
           >
             <Copy size={14} />
@@ -182,6 +190,36 @@ function QRScannerSection({
         )}
       </div>
     </div>
+  );
+}
+
+function UPIQRImage() {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div
+        className="w-56 h-56 rounded-xl flex flex-col items-center justify-center gap-3"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "2px dashed rgba(255,255,255,0.15)",
+        }}
+      >
+        <QrCode size={52} style={{ color: "#FF6B00" }} />
+        <p className="text-xs text-center px-4" style={{ color: "#e5e7eb" }}>
+          QR code not available. Please contact admin for the UPI QR code.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src="/assets/upi-qr.jpg"
+      alt="UPI Payment QR Code"
+      className="w-56 h-56 object-contain rounded-xl"
+      onError={() => setFailed(true)}
+    />
   );
 }
 
@@ -218,7 +256,7 @@ export default function DepositPage() {
   const handleSubmit = async () => {
     const amt = Number.parseInt(amount);
     if (!amount || Number.isNaN(amt) || amt < 100) {
-      setError("Minimum deposit is \u20b9100");
+      setError("Minimum deposit is ₹100");
       return;
     }
     if (!utr.trim() || utr.length < 6) {
@@ -249,6 +287,12 @@ export default function DepositPage() {
     border: "1px solid rgba(255,255,255,0.1)",
   };
 
+  const btnBase: React.CSSProperties = {
+    touchAction: "manipulation",
+    cursor: "pointer",
+    WebkitTapHighlightColor: "transparent",
+  };
+
   return (
     <div className="px-4 py-5 pb-8">
       <h1 className="text-2xl font-bold text-foreground mb-5">Deposit</h1>
@@ -272,8 +316,9 @@ export default function DepositPage() {
             onClick={() => setQrTab("show")}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
             style={{
+              ...btnBase,
               background: qrTab === "show" ? "#FF6B00" : "transparent",
-              color: qrTab === "show" ? "#0D1117" : "rgba(255,255,255,0.6)",
+              color: qrTab === "show" ? "#0D1117" : "rgba(255,255,255,0.85)",
             }}
             data-ocid="deposit.tab"
           >
@@ -285,8 +330,9 @@ export default function DepositPage() {
             onClick={() => setQrTab("scan")}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all"
             style={{
+              ...btnBase,
               background: qrTab === "scan" ? "#FF6B00" : "transparent",
-              color: qrTab === "scan" ? "#0D1117" : "rgba(255,255,255,0.6)",
+              color: qrTab === "scan" ? "#0D1117" : "rgba(255,255,255,0.85)",
             }}
             data-ocid="deposit.tab"
           >
@@ -299,11 +345,7 @@ export default function DepositPage() {
           <>
             <div className="flex justify-center mb-3">
               <div className="p-3 rounded-2xl" style={{ background: "#fff" }}>
-                <img
-                  src="/assets/upi-qr.jpg"
-                  alt="UPI Payment QR Code"
-                  className="w-56 h-56 object-contain rounded-xl"
-                />
+                <UPIQRImage />
               </div>
             </div>
             <div className="flex justify-center gap-3 mt-3">
@@ -311,37 +353,29 @@ export default function DepositPage() {
                 {
                   label: "GPay",
                   img: "/assets/generated/googlepay-logo-transparent.dim_100x100.png",
+                  color: "#4285F4",
+                  initial: "G",
                 },
                 {
                   label: "PhonePe",
                   img: "/assets/generated/phonepe-logo-transparent.dim_100x100.png",
+                  color: "#7B2FF7",
+                  initial: "P",
                 },
                 {
                   label: "Paytm",
                   img: "/assets/generated/paytm-logo-transparent.dim_100x100.png",
+                  color: "#00BAF2",
+                  initial: "Pt",
                 },
               ].map((app) => (
-                <div
-                  key={app.label}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
-                  >
-                    <img
-                      src={app.img}
-                      alt={app.label}
-                      className="w-7 h-7 object-contain"
-                    />
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {app.label}
-                  </span>
-                </div>
+                <AppIcon key={app.label} app={app} />
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center mt-3">
+            <p
+              className="text-xs text-center mt-3"
+              style={{ color: "#e5e7eb" }}
+            >
               Scan using GPay, PhonePe, or Paytm to pay
             </p>
           </>
@@ -389,7 +423,7 @@ export default function DepositPage() {
               htmlFor="deposit-amount"
               className="text-sm font-medium text-foreground/80"
             >
-              Amount (\u20b9)
+              Amount (₹)
             </label>
             <input
               id="deposit-amount"
@@ -399,7 +433,7 @@ export default function DepositPage() {
                 setAmount(e.target.value);
                 setError("");
               }}
-              placeholder="Minimum \u20b9100"
+              placeholder="Minimum ₹100"
               className={inputClass}
               style={inputStyle}
               data-ocid="deposit.input"
@@ -427,7 +461,7 @@ export default function DepositPage() {
             />
             {utr && (
               <p className="text-xs mt-1" style={{ color: "#00C9A7" }}>
-                \u2713 UTR auto-filled from scan
+                ✓ UTR auto-filled from scan
               </p>
             )}
           </div>
@@ -446,6 +480,7 @@ export default function DepositPage() {
             disabled={submitting}
             className="w-full py-3.5 rounded-xl font-semibold text-sm disabled:opacity-50"
             style={{
+              ...btnBase,
               background: "linear-gradient(135deg, #FF6B00, #FF9500)",
               color: "#0D1117",
             }}
@@ -462,17 +497,19 @@ export default function DepositPage() {
       </h3>
       {loading ? (
         <div
-          className="text-muted-foreground text-sm"
+          className="text-sm"
+          style={{ color: "#e5e7eb" }}
           data-ocid="deposit.loading_state"
         >
           Loading...
         </div>
       ) : deposits.length === 0 ? (
         <div
-          className="text-center py-8 text-muted-foreground text-sm"
+          className="text-center py-8 text-sm"
+          style={{ color: "#e5e7eb" }}
           data-ocid="deposit.empty_state"
         >
-          <div className="text-3xl mb-2">\ud83d\udcb0</div>
+          <div className="text-3xl mb-2">💰</div>
           No deposits yet
         </div>
       ) : (
@@ -489,9 +526,9 @@ export default function DepositPage() {
               >
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    \u20b9{Number(d.amount).toLocaleString("en-IN")}
+                    ₹{Number(d.amount).toLocaleString("en-IN")}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs" style={{ color: "#e5e7eb" }}>
                     UTR: {d.utrNumber}
                   </p>
                 </div>
@@ -501,17 +538,50 @@ export default function DepositPage() {
         </div>
       )}
 
-      <footer className="mt-10 text-center text-xs text-muted-foreground/50">
-        \u00a9 {new Date().getFullYear()}. Built with love using{" "}
+      <footer
+        className="mt-10 text-center text-xs"
+        style={{ color: "rgba(255,255,255,0.45)" }}
+      >
+        © {new Date().getFullYear()}. Built with love using{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-muted-foreground transition-colors"
+          className="underline hover:text-white/70 transition-colors"
         >
           caffeine.ai
         </a>
       </footer>
+    </div>
+  );
+}
+
+function AppIcon({
+  app,
+}: {
+  app: { label: string; img: string; color: string; initial: string };
+}) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
+        style={{ background: failed ? app.color : "rgba(255,255,255,0.08)" }}
+      >
+        {failed ? (
+          <span className="text-white font-bold text-xs">{app.initial}</span>
+        ) : (
+          <img
+            src={app.img}
+            alt={app.label}
+            className="w-7 h-7 object-contain"
+            onError={() => setFailed(true)}
+          />
+        )}
+      </div>
+      <span className="text-xs" style={{ color: "#e5e7eb" }}>
+        {app.label}
+      </span>
     </div>
   );
 }
